@@ -1,0 +1,334 @@
+================================================================================
+  ARRAKIS PROJECT — CODE EXPLANATION
+  CSE 4102: Computer Graphics and Image Processing Laboratory
+================================================================================
+
+This document explains every major section of arrakis.cpp in plain language.
+
+--------------------------------------------------------------------------------
+SECTION 1 — HEADER INCLUDES
+--------------------------------------------------------------------------------
+
+  #include <glad/glad.h>       <- MUST be first. GLAD loads all OpenGL function
+                                  pointers at runtime. Without this, calls like
+                                  glDrawArrays() or glGenBuffers() do not exist.
+
+  #include <GLFW/glfw3.h>      <- GLFW creates the OS window and OpenGL context.
+                                  It also handles keyboard input and swap buffers.
+
+  #include <glm/glm.hpp>       <- GLM (OpenGL Mathematics) provides vec2, vec3,
+  #include <glm/gtc/           <- mat4, and math functions like glm::translate(),
+          matrix_transform.hpp>   glm::rotate(), glm::scale(), glm::lookAt(),
+  #include <glm/gtc/           <- and glm::perspective().
+          type_ptr.hpp>           glm::value_ptr() converts a mat4 to a float*
+                                  pointer that OpenGL uniform functions accept.
+
+  IMPORTANT: glad.h must ALWAYS come before glfw3.h. If GLFW is included first,
+  it includes its own version of the OpenGL header and GLAD fails to compile.
+
+--------------------------------------------------------------------------------
+SECTION 2 — GLOBAL VARIABLES
+--------------------------------------------------------------------------------
+
+  SCR_WIDTH / SCR_HEIGHT    Window size in pixels (1024 x 768).
+
+  g_showObject              Which object to display:
+                              0 = show all 5 in split panels
+                              1 = Harvester only
+                              2 = Ornithopter only
+                              3 = Thumper only
+                              4 = SpiceTank only
+                              5 = Rock only
+
+  g_wireframe               If true, glPolygonMode draws outlines only (GL_LINE).
+                            If false, filled solid faces (GL_FILL).
+
+  g_camYaw / g_camPitch     Camera orbit angles in degrees.
+                              Yaw   = left-right rotation around the Y axis.
+                              Pitch = up-down tilt.
+                            Arrow keys change these values.
+
+  g_shaderProgram / g_VAO   The compiled GPU shader program ID and the Vertex
+                            Array Object ID. Stored globally so every drawing
+                            function can access them without passing arguments.
+
+--------------------------------------------------------------------------------
+SECTION 3 — KEY CALLBACK (key_callback)
+--------------------------------------------------------------------------------
+
+  GLFW calls this function automatically every time a key is pressed or held.
+
+  ESC                 -> Close the window.
+  0 / 1 / 2 / 3 / 4 / 5  -> Set g_showObject to select which view.
+  W                   -> Toggle wireframe on/off.
+  Arrow keys          -> Increase or decrease g_camYaw (left/right) and
+                        g_camPitch (up/down) by 4 degrees per key press.
+                        Pitch is clamped to [-89, +89] to avoid flipping.
+
+--------------------------------------------------------------------------------
+SECTION 4 — SHADER COMPILE HELPERS
+--------------------------------------------------------------------------------
+
+  checkShaderCompile(shader, name)
+    After calling glCompileShader(), this asks OpenGL if compilation succeeded.
+    If not, it reads the error log and prints it to the console.
+
+  checkProgramLink(program)
+    After calling glLinkProgram(), this checks if linking succeeded and prints
+    any linker errors to the console.
+
+  These helpers are for debugging only. Without them, shader errors are silent.
+
+--------------------------------------------------------------------------------
+SECTION 5 — UNIT CUBE (VAO / VBO)
+--------------------------------------------------------------------------------
+
+  A cube is defined as 36 vertices (6 faces × 2 triangles × 3 vertices).
+  Each vertex is an (x, y, z) position in the range [-0.5, +0.5].
+
+  VBO (Vertex Buffer Object)
+    Stores the raw vertex data on the GPU memory.
+
+  VAO (Vertex Array Object)
+    Records how to interpret the VBO data:
+      - 3 floats per vertex
+      - attribute location 0 (matching "layout(location=0)" in the vertex shader)
+
+  Once uploaded, the same cube geometry is reused for EVERY part of EVERY
+  object. Different transforms (translate, rotate, scale) make each copy appear
+  as a different shape and size.
+
+--------------------------------------------------------------------------------
+SECTION 6 — SHADERS
+--------------------------------------------------------------------------------
+
+  VERTEX SHADER
+    Runs on the GPU once per vertex. Receives position (aPos) and multiplies it
+    by three matrices in sequence:
+
+      gl_Position = projection * view * model * vec4(aPos, 1.0);
+
+    model      : moves/rotates/scales THIS particular cube part into world space.
+    view       : moves the world to simulate the camera's position and direction.
+    projection : applies perspective (things far away appear smaller).
+
+  FRAGMENT SHADER
+    Runs on the GPU once per screen pixel that a triangle covers.
+    It simply outputs the objectColor uniform as the pixel colour.
+    The colour is set per cube part in drawCube().
+
+--------------------------------------------------------------------------------
+SECTION 7 — drawCube(root, local, color)
+--------------------------------------------------------------------------------
+
+  This is the only function that issues actual draw commands to OpenGL.
+
+  Parameters:
+    root   = world-space offset matrix for the whole object (identity in
+             individual mode, could be a translation in a scene setup).
+    local  = part-specific transform: translate + rotate + scale of this piece.
+    color  = RGB colour for this cube part.
+
+  What it does:
+    1. Computes  model = root * local   (combine world offset with part transform)
+    2. Sends "model" to the vertex shader via glUniformMatrix4fv().
+    3. Sends "objectColor" to the fragment shader via glUniform3fv().
+    4. Calls glDrawArrays(GL_TRIANGLES, 0, 36) to draw the 36-vertex cube.
+
+  The transform order inside "local" is always:
+    translate first, then rotate, then scale.
+  (Applied right-to-left in the shader: scale → rotate → translate.)
+
+--------------------------------------------------------------------------------
+SECTION 8 — COLOUR PALETTE
+--------------------------------------------------------------------------------
+
+  All colours are defined as glm::vec3(R, G, B) with values in [0.0, 1.0].
+  Named constants make the code readable and consistent:
+
+    COL_SAND_DARK / MID / LIGHT  = desert sand shades (brown/tan)
+    COL_SPICE_ORG / DEEP         = Arrakis spice (orange / deep red-orange)
+    COL_METAL_DARK / MID / LIGHT = industrial metal shades (dark grey to light)
+    COL_RUST                     = corroded metal (reddish brown)
+    COL_GLASS                    = cockpit glass (very dark blue-grey)
+    COL_ROCK_DARK / MID / LIGHT  = sandstone rock shades
+    COL_TREAD                    = caterpillar track rubber (near black)
+    COL_BLACK                    = exhaust nozzles (very dark)
+
+--------------------------------------------------------------------------------
+SECTION 9 — OBJECT FUNCTIONS
+--------------------------------------------------------------------------------
+
+  Each of the 5 objects has one function. All follow the same pattern:
+    - Receive a "root" matrix (world-space base transform).
+    - For each part, build a "local" matrix using glm::translate, glm::rotate,
+      and glm::scale applied to glm::mat4(1.f) (the identity matrix).
+    - Call drawCube(root, local, colour) to draw that part.
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Object 1 — drawHarvester()                                              │
+  │                                                                         │
+  │   Parts:                                                                │
+  │     Chassis         - wide flat base (COL_SAND_DARK)                   │
+  │     Left tread      - long slab + rail on +Z side (COL_TREAD)          │
+  │     Right tread     - mirror of left on -Z side                        │
+  │     Main body/hopper- large box that holds spice (COL_SAND_MID)        │
+  │     Upper deck      - flat slab on top of hopper                       │
+  │     Cockpit         - dark glass box at front-top (COL_GLASS)          │
+  │     Harvesting jaw  - wide front scoop (COL_METAL_MID) with spice-     │
+  │                       stained inner face (COL_SPICE_DEEP)              │
+  │     Intake scoops   - side funnels (COL_RUST)                          │
+  │     Rear block      - machinery/processing unit at back                │
+  │     Exhaust stacks  - 2 tall thin columns with black caps               │
+  │     Spice vent      - orange glowing slot on top (COL_SPICE_ORG)       │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Object 2 — drawOrnithopter()                                            │
+  │                                                                         │
+  │   Parts:                                                                │
+  │     Fuselage        - elongated body (COL_SAND_MID)                    │
+  │     Nose cone       - tapered front                                    │
+  │     Cockpit         - glass dome + frame at front-top                  │
+  │     4 wing panels   - 2 per side, staggered at different Y offsets and │
+  │                       small rotation angles to look swept              │
+  │     Tail boom       - thin long rod at rear (COL_METAL_DARK)           │
+  │     Horizontal stab - wide flat piece at tail                          │
+  │     Vertical fin    - upright slab for directional stability           │
+  │     2 engine pods   - under-fuselage with black nozzle ends            │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Object 3 — drawThumper()                                                │
+  │                                                                         │
+  │   A thumper is a stake driven into the sand to attract sandworms.      │
+  │   Parts:                                                                │
+  │     Anchor plate    - flat square base (COL_METAL_DARK)                │
+  │     4 corner spikes - thin pillars at plate corners, half below ground  │
+  │     Main column     - tall central post (COL_METAL_MID)                │
+  │     Mid collar      - wide ring at mid-height (COL_RUST)               │
+  │     Upper collar    - smaller ring higher up                           │
+  │     Piston head     - block on top with spice-coloured cap             │
+  │     4 anchor pegs   - small cubes at plate edges for guy-wires         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Object 4 — drawSpiceTank()                                              │
+  │                                                                         │
+  │   An industrial container for storing harvested spice.                 │
+  │   Parts:                                                                │
+  │     4 support legs  - corner pillars holding tank off ground           │
+  │     Cross braces    - horizontal bars connecting front/back legs       │
+  │     Main tank body  - large tall box (COL_SAND_MID)                   │
+  │     Weld seam bands - 2 horizontal dark rings around tank              │
+  │     Domed top cap   - slightly smaller box at top (COL_SAND_DARK)      │
+  │     Fill hatch      - orange square on top for loading spice           │
+  │     2 pressure gauges - small boxes + glass face on side               │
+  │     Pipe/valve cluster - rust-coloured pipe at base front              │
+  │     Ladder          - 5 rungs + 2 rails on side for maintenance access │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Object 5 — drawRock()                                                   │
+  │                                                                         │
+  │   A desert rock formation made of multiple boulders.                   │
+  │   Parts:                                                                │
+  │     Boulder 1  - large base slab, rotated 15 deg on Y + 6 deg on Z    │
+  │     Boulder 2  - tall leaning slab, rotated 22 on Y + -14 on Z        │
+  │     Boulder 3  - medium rounded top piece, multi-axis rotation         │
+  │     Boulder 4  - low flat slab to the right, 35 deg Y rotation        │
+  │     Boulder 5  - angled shard, -28 Y + 18 X rotation                  │
+  │     Pebble cluster - 4 small irregular cubes scattered around base     │
+  │                                                                         │
+  │   Rotation is the key technique here. Applying rotate() at different   │
+  │   angles before scale() makes a rectangular cube look like a rough     │
+  │   angular boulder rather than a perfect box.                           │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+--------------------------------------------------------------------------------
+SECTION 10 — CAMERA SYSTEM
+--------------------------------------------------------------------------------
+
+  The camera orbits around a target point using spherical coordinates:
+
+    camPos.x = target.x + dist * cos(pitch) * sin(yaw)
+    camPos.y = target.y + dist * sin(pitch)
+    camPos.z = target.z + dist * cos(pitch) * cos(yaw)
+
+  This gives a camera that always looks at the target from an orbit angle
+  controlled by yaw (horizontal) and pitch (vertical).
+
+  glm::lookAt(camPos, target, upVector)
+    Builds the VIEW matrix. This transforms all world coordinates so that
+    the camera is effectively at the origin looking down -Z.
+
+  glm::perspective(FOV, aspect, near, far)
+    Builds the PROJECTION matrix. FOV = 60 degrees.
+    Objects beyond "far" (200 units) or closer than "near" (0.1 units) are
+    clipped.
+
+  The 60-degree FOV is chosen so objects fill about 80% of the screen
+  while never clipping at the default orbit angles.
+
+--------------------------------------------------------------------------------
+SECTION 11 — RENDER LOOP
+--------------------------------------------------------------------------------
+
+  The main loop runs every frame until ESC is pressed:
+
+  Step 1 — Clear the screen
+    glClearColor sets background colour (dark desert night: 0.06, 0.05, 0.04).
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) erases the previous
+    frame's colours AND the depth buffer (which stores which pixel is "in front").
+
+  Step 2 — Compute camera matrices
+    View and projection matrices are computed from g_camYaw, g_camPitch,
+    target point, and distance. Then sent to the shader via glUniformMatrix4fv.
+
+  Step 3a — ALL MODE (g_showObject == 0)
+    The screen is divided into 5 panels using glViewport + glScissor.
+      glViewport defines which rectangle of screen pixels this draw goes to.
+      glScissor prevents the clear operation from leaking into other panels.
+    Each panel has its own camera distance tuned for that specific object.
+    All 5 object functions are called once each, one per panel.
+
+  Step 3b — INDIVIDUAL MODE (g_showObject 1-5)
+    Full screen is used. Camera distance is tuned for the selected object.
+    Only the chosen object function is called via a switch statement.
+
+  Step 4 — Swap buffers and poll events
+    glfwSwapBuffers presents the finished frame to the screen (double buffering).
+    glfwPollEvents processes any keyboard/mouse input since last frame.
+
+--------------------------------------------------------------------------------
+SECTION 12 — DEPTH TESTING
+--------------------------------------------------------------------------------
+
+  glEnable(GL_DEPTH_TEST)
+
+  Without depth testing, OpenGL draws triangles in the order they are submitted.
+  A back face could overwrite a front face that was drawn earlier.
+
+  With depth testing enabled:
+    - Each pixel stores the distance (depth) of the closest triangle drawn so far.
+    - When a new triangle covers a pixel, OpenGL checks its depth.
+    - If the new triangle is FARTHER away, it is discarded (not drawn).
+    - If it is CLOSER, it replaces both the colour and the depth value.
+
+  The depth buffer is cleared every frame with GL_DEPTH_BUFFER_BIT so the test
+  always starts fresh.
+
+--------------------------------------------------------------------------------
+SECTION 13 — CLEANUP
+--------------------------------------------------------------------------------
+
+  After the render loop exits (ESC pressed):
+
+  glDeleteVertexArrays(1, &VAO)  - frees the VAO on the GPU
+  glDeleteBuffers(1, &VBO)       - frees the vertex data buffer on the GPU
+  glDeleteProgram(shaderProgram) - frees the compiled shader program on the GPU
+  glfwTerminate()                - closes the window and releases all GLFW resources
+
+================================================================================
+END OF DOCUMENT
+================================================================================

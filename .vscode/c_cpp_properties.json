@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "Win32-MSVC",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "E:/glfw_nec/Include/include",
+        "E:/glm"
+      ],
+      "compilerPath": "cl.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ],
+  "version": 4
+}
