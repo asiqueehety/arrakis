@@ -1,51 +1,71 @@
-# ARRAKIS / Harvester Down
+# Arrakis: Harvester Down
 
-## Play the Rescue Game
+A C++17 / OpenGL 3.3 desert rescue game for CSE 4102, Computer Graphics and Image
+Processing Laboratory. All scene geometry is generated procedurally. No external
+3D models or image textures are loaded; the only runtime file assets are audio.
 
-A sandworm is pursuing a moving spice harvester across a winding dune escape
-route. Every seven seconds the harvester releases another group of one to four
-workers, starting six seconds into the mission. They run clear, then wait at that
-fixed drop-off location, marked by an amber beacon. Rescue as many of the 36 crew
-as possible, eight at a time, and deliver them to the cyan landing pad. Only
-delivered survivors count toward your score.
+## Project Layout
 
-The first mission gives you 210 seconds (3:30) before the worm catches the
-harvester. Later missions shorten this by ten seconds, down to a 150-second
-minimum. The surfaced worm and its sand wake move closer throughout the pursuit;
-the HUD shows its closing distance and the radar tracks every waiting group.
+```text
+src/                    Application, procedural graphics, game, HUD, and audio
+tests/                  Deterministic headless mission tests
+third_party/glad/       Generated OpenGL function loader
+third_party/miniaudio/  Vendored audio library and implementation translation unit
+assets/audio/           Eight runtime sound effects and retained asset license
+docs/chapters/          Detailed, editable explanation chapters
+docs/reference/         Original proposal and visual-reference images
+docs/Arrakis_Code_Explanation.pdf  Complete project explanation and source reference
+tools/                  Reproducible documentation generator
+.vscode/                Shared IntelliSense and debugger configuration
+CMakeLists.txt          Primary build configuration
+Arrakis_001.vcxproj     Alternative Visual Studio project
+vcpkg.json              Optional GLM dependency manifest
+build/                  Generated builds only (ignored by Git)
+```
 
-- `Enter`: start or advance to the next mission.
-- Mouse hover: steer without clicking. Hover right or left of center to turn the
-  ornithopter and camera together. The center brackets mark a neutral dead zone;
-  move the cursor back inside to stop turning. Farther from center turns faster.
-- `W / S`: fly forward / backward along the current heading.
-- `A / D`: strafe left / right without changing which way the aircraft faces.
-- `Q / E`: raise / lower terrain-following flight altitude.
-- `Space`: brake, descend to rescue altitude, and winch nearby workers. Hold it
-  over the cyan pad to unload. Pickup requires low, steady flight.
-- `Left Shift`: rechargeable boost; release it to recharge.
-- `C`: cycle wide, close, and tactical cameras.
-- Hover above / below center to change camera elevation. Left / right arrows
-  provide keyboard steering; up / down arrows adjust camera elevation.
-- `P`: pause / resume. Losing window focus also pauses the mission.
-- `R`: retry the current mission. `F11`: fullscreen. `Esc`: exit.
+Unused downloaded OBJ/material/texture packs, old build trees, the unused Vorbis
+decoder, redundant Ogg sound copies, and outdated code notes have been removed.
+Visual references and library/asset license notices are preserved.
 
-All camera modes rotate with the aircraft, keeping its nose forward on screen.
-The cursor stays free; moving it out of the window stops mouse steering. Starting,
-retrying, resizing, switching fullscreen, or resuming centers the cursor to avoid
-an accidental turn. Losing focus pauses flight and clears held inputs.
+## Gameplay
 
-The worm rises, bends its circular tooth-lined mouth toward the harvester,
-swallows it and nearby stranded crew, then disappears into a collapsing sand
-basin. Workers farther away remain available for rescue during a 60-second final
-extraction window. Approaching the moving worm too closely is dangerous for both
-the aircraft and crew left behind. Its procedural shape follows `sandworm.jpg`;
-the image is a visual reference, not a flat sprite or a texture pasted onto a
-cylinder. The cloud-free sky blends golden horizon haze into blue, with a visible
-warm sun lighting the dunes.
-The best delivered score is retained for the current application session.
+Rescue the 36 workers evacuating a moving spice harvester before a pursuing worm
+reaches it. Groups of one to four start leaving at six seconds, then every seven
+seconds. They run away from the harvester and wait at fixed amber beacons. Winch
+up to eight aboard, then deliver them to the cyan pad. Only delivered survivors
+count toward the score. The initial pursuit lasts 210 seconds; later missions
+shorten it by ten seconds to a minimum of 150. After the attack, a 60-second final
+extraction window allows recovery of distant survivors. The best score persists
+only while the application is open.
+
+| Input | Action |
+| --- | --- |
+| Enter | Start or advance to the next mission |
+| Mouse hover | Turn aircraft and camera together; center dead zone stops turning |
+| W / S | Forward / backward |
+| A / D | Strafe without changing heading |
+| Q / E | Raise / lower terrain-following altitude |
+| Space | Brake, descend, winch nearby workers, or unload over the cyan pad |
+| Left Shift | Rechargeable boost |
+| C | Cycle wide, close, and tactical camera |
+| Arrow keys | Turn and adjust camera elevation |
+| P | Pause / resume |
+| M | Mute / unmute |
+| R | Retry the current mission |
+| F | Toggle wireframe |
+| F11 | Toggle fullscreen |
+| Esc | Exit |
+
+Pickup requires low, steady flight. Window-focus loss automatically pauses and
+clears held inputs. Mission reset, resume, resize, and fullscreen changes center
+the mouse to prevent unintended steering. Audio gracefully falls back to silence
+if the device or a file cannot be initialized.
 
 ## Build and Run
+
+Requires CMake 3.20+, a C++17 compiler, GLFW, GLAD headers, GLM, and an OpenGL
+3.3-capable graphics driver. This laboratory installation uses `E:/glfw_nec` and
+`E:/glm`; these paths are discovery hints, not bundled dependencies.
 
 ```powershell
 cmake -S . -B build/rescue -G "Visual Studio 17 2022" -A x64
@@ -53,10 +73,18 @@ cmake --build build/rescue --config Release
 .\build\rescue\Release\Arrakis.exe
 ```
 
-Requires C++17, GLFW, GLAD, GLM, and OpenGL 3.3. The existing `E:/glfw_nec` and
-`E:/glm` installs are discovery hints. Override `GLAD_INCLUDE_DIR`,
-`GLFW_INCLUDE_DIR`, `GLM_INCLUDE_DIR`, and `GLFW_LIBRARY` through CMake for other
-installations. The Visual Studio project also includes the new game headers.
+On another machine, pass `-DGLAD_INCLUDE_DIR=...`, `-DGLFW_INCLUDE_DIR=...`,
+`-DGLM_INCLUDE_DIR=...`, and `-DGLFW_LIBRARY=...` during configuration. The include
+paths must contain `glad/glad.h`, `GLFW/glfw3.h`, and `glm/glm.hpp` respectively.
+The vendored loader was generated for GL 4.6 core; use matching GLAD headers.
+The application itself requests only OpenGL 3.3. `vcpkg.json` installs GLM only,
+not GLFW or GLAD. The optional Visual Studio project retains local laboratory
+paths for its x64 configurations; CMake is the portable primary build route.
+
+The build copies `assets/audio/` beside the executable. Run from the project root
+or the executable directory, or distribute the executable with that asset folder.
+
+## Verification
 
 ```powershell
 ctest --test-dir build/rescue -C Release --output-on-failure
@@ -66,184 +94,25 @@ ctest --test-dir build/rescue -C Release --output-on-failure
 .\build\rescue\Release\Arrakis.exe --smoke-pursuit
 ```
 
-The first command runs deterministic headless rescue-logic tests. The smoke
-tests render 120 frames, check OpenGL errors, and exit; an optional second
-argument saves a BMP capture. They require an OpenGL-capable desktop.
-The mouse smoke test turns both directions while flying, cycles all three camera
-modes, and verifies the camera keeps the aircraft facing forward every frame.
-The pursuit smoke test renders the moving evacuation at mid-mission with both
-the fleeing harvester and approaching worm in view.
+CTest runs `Arrakis --test-game` without a window or audio device. Each graphical
+smoke command renders 120 frames, checks OpenGL errors, and exits; an optional
+second argument saves a BMP capture. These tests require a graphics desktop.
 
-## Original Renderer Reference
+## Detailed PDF
 
-The following material describes the earlier free-flight renderer. The game
-controls, build instructions, and behavior above supersede the older sections.
+Read [the project explanation](docs/Arrakis_Code_Explanation.pdf) for architecture,
+C++ and graphics foundations, code-range walkthroughs, game state transitions,
+each deterministic test, procedural models, shader mathematics, HUD/font/radar,
+sandworm animation, audio, build/configuration, limitations, and full numbered
+source appendices. Third-party library internals are explained separately from
+the project's own code.
 
-# Original Cinematic Dynamic Dune Simulation
-### CSE 4102: Computer Graphics and Image Processing Laboratory Project
+Regenerate after modifying code or chapter text:
 
----
-
-## 🌟 Project Overview
-
-**ARRAKIS** is a high-fidelity, real-time 3D interactive graphics simulation inspired by the *Dune* universe (2021 / 2024 films). Built completely from scratch in modern **OpenGL 3.3 Core Profile** (C++17), the project delivers a game-grade cinematic desert experience.
-
-**CRITICAL SPECIFICATION**: Every single 3D object in the world is generated **procedurally from mathematical primitive shapes** (cubes, cylinders, UV spheres, aerodynamic aerofoil blades, and continuous heightfield grids). **NO external `.obj` or 3D model files are loaded.**
-
-### Core Highlights:
-- 🚁 **Movie-Accurate Atreides Ornithopter**: 8 tandem dragonfly aerofoil wings with high-frequency anti-phase flutter, faceted stealth cockpit canopy with tinted armored glass, twin turbine air intakes, afterburner reheat flame nozzles, and realistic aerodynamic flight banking.
-- 🏭 **Massive Industrial Spice Harvester**: Quad crawler tread pontoon units with road wheels, forward rotating harvesting cutter drum with crusher teeth and glowing cinnamon suction scoop, multi-tiered refinery deck, bridge floodlights, and exhaust funnels venting burning spice fumes.
-- 🛢️ **Movie-Realistic Spice Pressure Tanks**: Heavy-duty cylindrical pressure vessels with dished hemispherical heads, diagonal structural transport cradles with ISO lifting eyelets, high-pressure relief valves, and an illuminated vertical Melange spice level gauge that pulses with rich orange radiance.
-- 🏜️ **Seamless Rolling Dune Landscape**: Continuous 140×140 vertex heightfield terrain spanning 700 units, featuring large barchan dune swells, sharp windward/leeward crests, procedural wind ripple micro-shading, and analytical normal calculations.
-- 💨 **Atmospheric Wind & Blowing Sand Particle System**: Over 2,400 dynamic sand particles streaming across the dunes with wind gusts, active crawler dust plumes behind the harvester, and wing downwash dust dispersion underneath the ornithopter.
-- ☀️ **Game-Grade Lighting & Shading Pipeline**:
-  - Blinn-Phong specular highlights + Half-Lambert wrap diffuse for powdery sand diffusion.
-  - Directional blinding Arrakis sun with sun disk glow and atmospheric corona.
-  - High-resolution (2048×2048) soft PCF shadow mapping with slope-scale bias.
-  - Exponential squared desert dust distance fog (`#D89447`) smoothly blending distant dunes.
-- 🎬 **Dynamic Cinematic Chase Camera**: Spring-damped third-person camera following the ornithopter with inertia, banking reaction, and multiple view modes (Cinematic Chase, Cockpit, Overhead Tactical).
-
----
-
-## 🎮 Flight & Scene Controls
-
-| Key | Function |
-|---|---|
-| `W` | Accelerate / Thrust Forward |
-| `S` | Decelerate / Reverse Thrust |
-| `A` | Bank & Turn Left (aerodynamic roll) |
-| `D` | Bank & Turn Right (aerodynamic roll) |
-| `Q` | Ascend / Gain Altitude (nose tilts up) |
-| `E` | Descend / Lose Altitude (nose tilts down) |
-| `Left Shift` | **Afterburner Boost** (high-speed cruise + extended jet flame) |
-| `Space` | **Airbrake / Hover Mode** (rapid deceleration) |
-| `Arrow Keys` | Orbit Camera freely (Yaw & Pitch) around Ornithopter |
-| `C` | **Cycle Camera View** (Cinematic Chase → Cockpit Close → Overhead Tactical) |
-| `F` | Toggle Wireframe Rendering |
-| `F11` | Toggle True Fullscreen / Windowed Mode |
-| `ESC` | Exit Application |
-
----
-
-## 🚀 How to Run the Project
-
-The project is already pre-compiled and ready for execution.
-
-### Method 1: Command Line (PowerShell)
-From the project directory, run:
 ```powershell
-.\build\Release\Arrakis.exe
+python -m pip install -r tools/requirements.txt
+python tools/generate_docs.py
 ```
 
-### Method 2: File Explorer
-Navigate to:
-```
-Arrakis_001\Arrakis_001\build\Release\Arrakis.exe
-```
-Double-click `Arrakis.exe`.
-
-### Method 3: From Visual Studio 2022
-1. Open `Arrakis_001.vcxproj` in Visual Studio 2022.
-2. Select configuration **Release** and platform **x64**.
-3. Press **F5** (or `Ctrl+F5` to run without debugger).
-
----
-
-## 🛠️ How to Rebuild (If modifying source)
-
-### Prerequisites
-- Visual Studio 2022 (with Desktop C++ workload)
-- CMake ≥ 3.20
-- OpenGL 3.3 compatible GPU
-
-### Rebuilding via CMake
-Open PowerShell in the project root:
-```powershell
-# Stop any running instances
-Stop-Process -Name "Arrakis" -Force -ErrorAction SilentlyContinue
-
-# Configure & Build
-cmake -S . -B build
-cmake --build build --config Release
-
-# Run
-.\build\Release\Arrakis.exe
-```
-
----
-
-## 📐 Procedural Geometric Modeling (Zero External Meshes)
-
-All objects are generated mathematically in memory and uploaded to GPU Vertex Array Objects (VAOs):
-
-| Primitive | Mathematical Construction | Key Uses |
-|---|---|---|
-| **Cylinder** | Parametric circle extrusion with radial segments, normals, UVs, and capped end discs. | Jet intakes, reheat nozzles, tail boom, pressure tanks, harvester cutter drum, road wheels. |
-| **UV Sphere** | Polar latitude/longitude tessellation with smooth spherical normals. | Cockpit canopy bubble, hemispherical tank heads, bridge searchlights, sensor pods. |
-| **Cube** | 6 independent faces with outward normals and UV coordinates. | Fuselage bulkheads, crawler tracks, refinery chassis, transport cradles, rock strata. |
-| **Aerofoil Blade** | Tapered aerofoil profile spanning from root chord (1.0) to tip chord (0.22) with thickness drop. | 8 movie dragonfly wings, tail stabilizer fins, landing skids. |
-| **Dune Heightfield** | 140×140 grid tessellating a 700×700 unit terrain using continuous multi-harmonic sinusoidal and ridge functions: `h(x, z) = sin(x*0.009 + z*0.004)*14 + cos(x*0.004 - z*0.012)*9.5 + (1 - |sin(x*0.028 + z*0.016)|)^2 * 5`. | Vast seamless desert sand dunes with analytical finite-difference surface normals. |
-| **Quad** | 2-triangle camera-facing planar billboard. | Sand dust particle streaks and atmospheric skybox quad. |
-
----
-
-## 🔬 Shading, Lighting & Atmospheric Pipeline
-
-### 1. Blinn-Phong + Powder Wrap Lighting
-```glsl
-// Half-Lambert wrap lighting prevents unnatural black shadows on dunes:
-float diff = isSand == 1 ? max((dot(N, L) + 0.35) / 1.35, 0.0) : max(dot(N, L), 0.0);
-vec3 diffuse = diff * sunColor * baseColor;
-
-// Blinn-Phong specular highlight:
-vec3 H = normalize(L + V);
-float spec = pow(max(dot(N, H), 0.0), shininess);
-vec3 specular = spec * specularColor * sunColor;
-```
-
-### 2. Procedural Sand Texture & Micro-Sparkle
-- **Wind Dune Ripples**: Two sinusoidal wave harmonics aligned with the wind direction modulate the surface albedo subtly in the fragment shader.
-- **Slope-Based Color Blending**: Sun-bleached golden sand on dune crests (`#E5A65D`) blends into deep ochre tones (`#945222`) in shadowed troughs.
-- **Quartz Specular Sparkles**: Pseudo-random high-frequency glints simulate sunlight reflecting off individual sand grains.
-
-### 3. Soft PCF Shadow Mapping
-- **Pass 1 (Depth Only)**: Renders the scene from the directional sun's point of view into a `2048×2048` 32-bit floating-point depth texture.
-- **Slope-Scaled Bias**: `glPolygonOffset(2.5, 4.0)` completely eliminates shadow acne on sloping dunes.
-- **Pass 2 (Percentage Closer Filtering)**: A 3×3 sampling kernel samples neighboring depth texels, producing soft realistic shadow penumbras across the sand.
-
-### 4. Exponential Squared Desert Fog
-```glsl
-float dist = length(viewPos - FragPos);
-float fogFactor = 1.0 - exp(-pow(dist * fogDensity, 2.0));
-vec3 finalColor = mix(litColor, fogColor, fogFactor);
-```
-Fades distant dunes and structures smoothly into warm atmospheric desert haze (`#D89447`).
-
-### 5. Dynamic Blowing Sand Particle System
-- 2,400 persistent sand particles moving along the global wind vector `(-0.92, -0.04, 0.38)`.
-- Features wind gust dynamics (`sin(time * 1.8)`), terrain hugging, crawler tread dust plumes, and ornithopter downwash.
-
----
-
-## 📁 Repository Structure
-
-```
-Arrakis_001/
-├── arrakis.cpp          ← Master OpenGL C++ implementation (all systems in one file)
-├── glad.c               ← GLAD OpenGL 3.3 Core function loader
-├── CMakeLists.txt       ← CMake build configuration
-├── Arrakis_001.vcxproj  ← Visual Studio 2022 project file
-├── README.md            ← Comprehensive project documentation & run guide
-├── CODE_EXPLANATION.txt ← Deep line-by-line technical code explanation
-└── build/
-    └── Release/
-        └── Arrakis.exe  ← Standalone compiled executable
-```
-
----
-
-## 👥 Authors & Laboratory Information
-
-- **Course**: CSE 4102 — Computer Graphics and Image Processing Laboratory
-- **Project**: Arrakis — Dynamic Dune Scene Simulation
-- *All rights reserved. "The spice must flow."*
+The generator also writes `docs/documentation_manifest.json` with source SHA-256
+hashes and line counts so the documented snapshot can be checked.

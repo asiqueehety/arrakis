@@ -1,0 +1,137 @@
+{
+  "generated_at": "2026-10-09T18:09:38.814815+00:00",
+  "sources": [
+    {
+      "path": "src/arrakis.cpp",
+      "lines": 1892,
+      "sha256": "0088edeac81c14658147e8381ef57be5f422ef7421c85b3eb02d0248926b7d31"
+    },
+    {
+      "path": "src/arrakis_game.h",
+      "lines": 307,
+      "sha256": "7829e212a9f8665a718c3a464eea30a07f7aaff75e83c550cfa3806285f6c090"
+    },
+    {
+      "path": "src/arrakis_hud.h",
+      "lines": 552,
+      "sha256": "2bb9f101426b22f56f37b7a426eff93020e6fb60d3ea2dd61fcb1bc92dd1ee31"
+    },
+    {
+      "path": "src/arrakis_worm.h",
+      "lines": 360,
+      "sha256": "09496272eb925afbfe2290398fbde90f6eec632f21defaa20b755c80701c6f04"
+    },
+    {
+      "path": "src/arrakis_audio.h",
+      "lines": 293,
+      "sha256": "aec39668979caaef357e93dfe8db1ca9a2eafeb2ab3e44c4c7225dc61e53a4d5"
+    },
+    {
+      "path": "tests/arrakis_tests.h",
+      "lines": 1041,
+      "sha256": "6ea0ae56accadd1f5292aa8bf40c4a40a5d138e9287a3157df69bda5ecc51274"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "lines": 56,
+      "sha256": "83da39cf976b4ccc36ac211802fa85687a92d267bb5f8aa15c7cb57c6bdf70ec"
+    },
+    {
+      "path": "Arrakis_001.vcxproj",
+      "lines": 163,
+      "sha256": "398c0c6b9b62a5a1dec1720d970b9ddba307f6529af96398ba7a4ef788d8d47d"
+    },
+    {
+      "path": "Arrakis_001.vcxproj.filters",
+      "lines": 36,
+      "sha256": "9ad2728aacab7ce948d446e9004cc950bdc0e82910f5ab2d9a1aad79dd571021"
+    },
+    {
+      "path": ".gitignore",
+      "lines": 64,
+      "sha256": "e32c3f1818b3dd89f09f80d43e14a1d9302dbee810d8bd7664b53bb7ac6fa170"
+    },
+    {
+      "path": ".vscode/c_cpp_properties.json",
+      "lines": 17,
+      "sha256": "3874782a0b4f8f2e692ed4bf9db0500b607f9467777feb3d0ba16b26ab01dd97"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "lines": 15,
+      "sha256": "06547d7be3bc42251d0a0afd3c5848d7c224c2af009d2ea517ec4372b9f60599"
+    },
+    {
+      "path": "vcpkg.json",
+      "lines": 6,
+      "sha256": "c5f248b214efa9d6d231ed581d5f5c4520c452a3e31b5aab82f6024f472ff105"
+    },
+    {
+      "path": "tools/generate_docs.py",
+      "lines": 289,
+      "sha256": "053c396dbd11474820b4f6e952a6ab8a750285a5671d5aafadcbfb705c0566a4"
+    },
+    {
+      "path": "tools/requirements.txt",
+      "lines": 2,
+      "sha256": "44457c2e516ac79360a956538fd67972988805d2219c048ca573a0b5ec9d20c8"
+    },
+    {
+      "path": "third_party/miniaudio/miniaudio_impl.cpp",
+      "lines": 2,
+      "sha256": "ab1984bb9804ffd7b0303813595d0b345a8a86c34da1daffc353a14b34102a65"
+    },
+    {
+      "path": "third_party/glad/glad.c",
+      "lines": 1832,
+      "sha256": "95728ccb0552c8bf5cb01de5b6d48a116159d5a71a6ee2dec1bdb45ba294d8bc"
+    },
+    {
+      "path": "third_party/miniaudio/miniaudio.h",
+      "lines": 95864,
+      "sha256": "ac7af4de748b7e26b777f37e01cee313a308a7296a3eb080e2906b320cc55c89"
+    }
+  ],
+  "chapters": [
+    {
+      "path": "docs/chapters/01-project-and-build.md",
+      "sha256": "5da6648ab3f4e80850ab7faecf2ccf6f0534ad425c58158bc011875d534d4b3b",
+      "words": 3424
+    },
+    {
+      "path": "docs/chapters/02-renderer.md",
+      "sha256": "e716271e863932a76472e3dbc9424b423a2b5cc7d21e71f99e81c0b56984a356",
+      "words": 17159
+    },
+    {
+      "path": "docs/chapters/03-scene-and-runtime.md",
+      "sha256": "8122a48be3398a3dd461de0967ef96a002edafa1a2627dc4c5e42b69d09e0a6a",
+      "words": 17773
+    },
+    {
+      "path": "docs/chapters/04-game-and-tests.md",
+      "sha256": "7b0f3f3a19ac5f40e9b498bbcc2c0356b8d16b5706e29d39f86328d953c503b2",
+      "words": 16347
+    },
+    {
+      "path": "docs/chapters/05-hud-and-sandworm.md",
+      "sha256": "eea63db3cae32506208952b969d526ae750e0e5ae8276b12059be86be0abdfae",
+      "words": 18750
+    },
+    {
+      "path": "docs/chapters/06-audio-and-vendor.md",
+      "sha256": "60aade862a04b5f46b2e215ea766f110c9664b4db730cd6aeced20168d9e559d",
+      "words": 16729
+    },
+    {
+      "path": "docs/chapters/07-documentation-tools.md",
+      "sha256": "4b62996963e92ecef5e7c9d08dc766fda21c5120dad97b88ef73473dc95afa7b",
+      "words": 2511
+    }
+  ],
+  "pdf": {
+    "path": "docs\\Arrakis_Code_Explanation.pdf",
+    "pages": 1640,
+    "bytes": 3796158
+  }
+}
