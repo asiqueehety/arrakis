@@ -1,0 +1,17 @@
+# MTL file - created by a modified js OBJExporter
+
+newmtl Material.001
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pm 1
+Pr 0.49328729637828445
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.11162460879175282 0.11162460879175282 0.11162460879175282
+Ke 0 0 0
+map_Pm metalnessMap1.png
+map_Pr metalnessMap1.png
+norm normalMap1.png
+map_Ka metalnessMap1.png

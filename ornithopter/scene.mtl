@@ -1,0 +1,1366 @@
+# MTL file - created by a modified js OBJExporter
+
+newmtl material_69
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69.png
+map_Ke material_69.png
+
+newmtl material_69_0
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_0.png
+map_Ke material_69_0.png
+norm normalMap2.png
+
+newmtl material_52
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52.png
+map_Ke emissiveMap3.png
+norm normalMap3.png
+
+newmtl material_69_1
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_1.png
+map_Ke material_69_1.png
+
+newmtl material_52_0
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_0.png
+map_Ke emissiveMap5.png
+norm normalMap5.png
+
+newmtl material_69_2
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_2.png
+map_Ke material_69_2.png
+
+newmtl material_69_3
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_3.png
+map_Ke material_69_3.png
+
+newmtl material_69_4
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_4.png
+map_Ke material_69_4.png
+norm normalMap8.png
+
+newmtl material_52_1
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_1.png
+map_Ke emissiveMap9.png
+norm normalMap9.png
+
+newmtl material_69_5
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_5.png
+map_Ke material_69_5.png
+norm normalMap10.png
+
+newmtl material_69_6
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_6.png
+map_Ke material_69_6.png
+norm normalMap11.png
+
+newmtl material_69_7
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_7.png
+map_Ke material_69_7.png
+norm normalMap12.png
+
+newmtl material_69_8
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_8.png
+map_Ke material_69_8.png
+norm normalMap2.png
+
+newmtl material_69_9
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_9.png
+map_Ke material_69_9.png
+norm normalMap14.png
+
+newmtl material_52_2
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_2.png
+map_Ke emissiveMap15.png
+norm normalMap3.png
+
+newmtl material_52_3
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_3.png
+map_Ke emissiveMap16.png
+norm normalMap3.png
+
+newmtl material_52_4
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_4.png
+map_Ke emissiveMap17.png
+norm normalMap3.png
+
+newmtl material_52_5
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_5.png
+map_Ke emissiveMap18.png
+norm normalMap18.png
+
+newmtl material_69_10
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_10.png
+map_Ke material_69_10.png
+norm normalMap19.png
+
+newmtl material_69_11
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.7397490112733784 0.5450606818284116 0.3100790984976296
+Ke 0 0 0
+map_Ke emissiveMap20.png
+norm normalMap2.png
+
+newmtl material_52_6
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_6.png
+map_Ke emissiveMap21.png
+norm normalMap21.png
+
+newmtl material_52_7
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_7.png
+map_Ke emissiveMap22.png
+norm normalMap22.png
+
+newmtl material_52_8
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_8.png
+map_Ke emissiveMap23.png
+norm normalMap23.png
+
+newmtl material_69_12
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_12.png
+map_Ke material_69_12.png
+norm normalMap24.png
+
+newmtl material_69_13
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_13.png
+map_Ke material_69_13.png
+norm normalMap25.png
+
+newmtl material_69_14
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_14.png
+map_Ke material_69_14.png
+
+newmtl material_52_9
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_9.png
+map_Ke emissiveMap27.png
+norm normalMap23.png
+
+newmtl material_69_15
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_15.png
+map_Ke material_69_15.png
+norm normalMap28.png
+
+newmtl material_52_10
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_10.png
+map_Ke emissiveMap29.png
+norm normalMap29.png
+
+newmtl material_69_16
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_16.png
+map_Ke material_69_16.png
+
+newmtl material_69_17
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_17.png
+map_Ke material_69_17.png
+norm normalMap25.png
+
+newmtl material_69_18
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_18.png
+map_Ke material_69_18.png
+
+newmtl material_69_19
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_19.png
+map_Ke material_69_19.png
+norm normalMap33.png
+
+newmtl material_52_11
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_11.png
+map_Ke emissiveMap34.png
+norm normalMap21.png
+
+newmtl material_69_20
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_20.png
+map_Ke material_69_20.png
+norm normalMap35.png
+
+newmtl material_52_12
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_12.png
+map_Ke emissiveMap36.png
+norm normalMap22.png
+
+newmtl material_69_21
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_21.png
+map_Ke material_69_21.png
+norm normalMap37.png
+
+newmtl material_69_22
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_22.png
+map_Ke material_69_22.png
+norm normalMap33.png
+
+newmtl material_69_23
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_23.png
+map_Ke material_69_23.png
+norm normalMap39.png
+
+newmtl material_69_24
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_24.png
+map_Ke material_69_24.png
+
+newmtl material_69_25
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_25.png
+map_Ke material_69_25.png
+norm normalMap24.png
+
+newmtl material_69_26
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_26.png
+map_Ke material_69_26.png
+
+newmtl material_69_27
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_27.png
+map_Ke material_69_27.png
+norm normalMap10.png
+
+newmtl material_69_28
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_28.png
+map_Ke material_69_28.png
+norm normalMap44.png
+
+newmtl material_69_29
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_29.png
+map_Ke material_69_29.png
+norm normalMap2.png
+
+newmtl material_69_30
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_30.png
+map_Ke material_69_30.png
+
+newmtl material_52_13
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_13.png
+map_Ke emissiveMap47.png
+norm normalMap3.png
+
+newmtl material_52_14
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_14.png
+map_Ke emissiveMap48.png
+norm normalMap3.png
+
+newmtl material_52_15
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_15.png
+map_Ke emissiveMap49.png
+norm normalMap3.png
+
+newmtl material_69_31
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_31.png
+map_Ke material_69_31.png
+norm normalMap25.png
+
+newmtl material_69_32
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_32.png
+map_Ke material_69_32.png
+norm normalMap51.png
+
+newmtl material_69_33
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_33.png
+map_Ke material_69_33.png
+norm normalMap2.png
+
+newmtl material_69_34
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_34.png
+map_Ke material_69_34.png
+norm normalMap53.png
+
+newmtl material_69_35
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_35.png
+map_Ke material_69_35.png
+norm normalMap53.png
+
+newmtl material_69_36
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_36.png
+map_Ke material_69_36.png
+norm normalMap51.png
+
+newmtl material_69_37
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_37.png
+map_Ke material_69_37.png
+norm normalMap24.png
+
+newmtl material_69_38
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_38.png
+map_Ke material_69_38.png
+
+newmtl material_52_16
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_16.png
+map_Ke emissiveMap58.png
+norm normalMap23.png
+
+newmtl material_69_39
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_39.png
+map_Ke material_69_39.png
+norm normalMap8.png
+
+newmtl material_52_17
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_17.png
+map_Ke emissiveMap60.png
+norm normalMap3.png
+
+newmtl material_69_40
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_40.png
+map_Ke material_69_40.png
+norm normalMap61.png
+
+newmtl material_69_41
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_41.png
+map_Ke material_69_41.png
+norm normalMap62.png
+
+newmtl material_52_18
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_18.png
+map_Ke emissiveMap63.png
+norm normalMap3.png
+
+newmtl material_69_42
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_42.png
+map_Ke material_69_42.png
+norm normalMap24.png
+
+newmtl material_52_19
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_19.png
+map_Ke emissiveMap65.png
+norm normalMap18.png
+
+newmtl material_69_43
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_43.png
+map_Ke material_69_43.png
+
+newmtl material_69_44
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_44.png
+map_Ke material_69_44.png
+norm normalMap67.png
+
+newmtl material_69_45
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_45.png
+map_Ke material_69_45.png
+norm normalMap68.png
+
+newmtl material_69_46
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_46.png
+map_Ke material_69_46.png
+
+newmtl material_69_47
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_47.png
+map_Ke material_69_47.png
+norm normalMap14.png
+
+newmtl material_69_48
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_48.png
+map_Ke material_69_48.png
+
+newmtl material_69_49
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_49.png
+map_Ke material_69_49.png
+norm normalMap25.png
+
+newmtl material_69_50
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_50.png
+map_Ke material_69_50.png
+
+newmtl material_69_51
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_51.png
+map_Ke material_69_51.png
+norm normalMap24.png
+
+newmtl material_52_20
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_20.png
+map_Ke emissiveMap75.png
+norm normalMap3.png
+
+newmtl material_52_21
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_21.png
+map_Ke emissiveMap76.png
+norm normalMap21.png
+
+newmtl material_52_22
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_22.png
+map_Ke emissiveMap77.png
+norm normalMap3.png
+
+newmtl material_69_52
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_52.png
+map_Ke material_69_52.png
+
+newmtl material_52_23
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_23.png
+map_Ke emissiveMap79.png
+norm normalMap22.png
+
+newmtl material_69_53
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_53.png
+map_Ke material_69_53.png
+norm normalMap2.png
+
+newmtl material_69_54
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_54.png
+map_Ke material_69_54.png
+
+newmtl material_69_55
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_55.png
+map_Ke material_69_55.png
+norm normalMap44.png
+
+newmtl material_52_24
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_24.png
+map_Ke emissiveMap83.png
+norm normalMap18.png
+
+newmtl material_69_56
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_56.png
+map_Ke material_69_56.png
+norm normalMap25.png
+
+newmtl material_69_57
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_57.png
+map_Ke material_69_57.png
+norm normalMap2.png
+
+newmtl material_52_25
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_25.png
+map_Ke emissiveMap86.png
+norm normalMap21.png
+
+newmtl material_52_26
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_26.png
+map_Ke emissiveMap87.png
+norm normalMap3.png
+
+newmtl material_69_58
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_58.png
+map_Ke material_69_58.png
+norm normalMap44.png
+
+newmtl material_69_59
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_59.png
+map_Ke material_69_59.png
+norm normalMap2.png
+
+newmtl material_69_60
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_60.png
+map_Ke material_69_60.png
+norm normalMap2.png
+
+newmtl material_52_27
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_27.png
+map_Ke emissiveMap91.png
+norm normalMap3.png
+
+newmtl material_52_28
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_28.png
+map_Ke emissiveMap92.png
+norm normalMap22.png
+
+newmtl material_69_61
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_61.png
+map_Ke material_69_61.png
+norm normalMap24.png
+
+newmtl material_69_62
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_62.png
+map_Ke material_69_62.png
+norm normalMap2.png
+
+newmtl material_69_63
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_63.png
+map_Ke material_69_63.png
+norm normalMap2.png
+
+newmtl material_69_64
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_64.png
+map_Ke material_69_64.png
+norm normalMap8.png
+
+newmtl material_52_29
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_52_29.png
+map_Ke emissiveMap97.png
+norm normalMap3.png
+
+newmtl material_69_65
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.9687801435864786
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd material_69_65.png
+map_Ke material_69_65.png
+norm normalMap98.png
+
+newmtl material_33
+Tr 0.65
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.719021292278307
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0 0 0
+Ke 0 0 0
