@@ -1,5 +1,5 @@
 // =============================================================================
-//  ARRAKIS — Cinematic Dynamic Dune Experience
+//  ARRAKIS - Harvester Down: a timed desert rescue game
 //  CSE 4102: Computer Graphics and Image Processing Laboratory
 //
 //  A high-fidelity real-time 3D simulation inspired by the DUNE universe.
@@ -28,12 +28,14 @@
 //    - Cinematic Third-Person Chase Camera with smooth flight kinematics.
 //
 //  CONTROLS:
-//    W / S           - Accelerate / Decelerate
-//    A / D           - Bank & Turn Left / Right (aerodynamic roll)
-//    Q / E           - Ascend / Descend (pitch tilt)
-//    Left Shift      - Afterburner Jet Boost (high speed cruise)
-//    Space           - Airbrake / Hover Mode
-//    Arrow Keys      - Orbit Camera around Ornithopter
+//    Enter           - Start / next mission
+//    Mouse hover     - Steer aircraft and camera together (center stops turning)
+//    W / S, A / D    - Forward / reverse, strafe left / right
+//    Q / E           - Raise / lower terrain-following altitude
+//    Left Shift      - Rechargeable boost
+//    Space           - Hover, lower winch, rescue / unload at base
+//    P / R           - Pause / retry mission
+//    Arrow Keys      - Keyboard steering / camera elevation
 //    C               - Toggle Camera View (Cinematic Chase / Cockpit / Overhead)
 //    F               - Toggle Wireframe
 //    F11             - Toggle Fullscreen
@@ -53,13 +55,15 @@
 #include <random>
 #include <algorithm>
 #include <string>
+#include <fstream>
+#include <cstdint>
 
 // =============================================================================
 // WINDOW & DISPLAY CONFIGURATION
 // =============================================================================
-int  g_scrW = 1920;
-int  g_scrH = 1080;
-bool g_isFullscreen = true;
+int  g_scrW = 1280;
+int  g_scrH = 720;
+bool g_isFullscreen = false;
 GLFWwindow* g_window = nullptr;
 
 // =============================================================================
@@ -68,7 +72,6 @@ GLFWwindow* g_window = nullptr;
 bool  g_keys[1024]  = {};
 bool  g_wireframe   = false;
 int   g_camMode     = 0;     // 0: Cinematic Chase, 1: Cockpit/Close, 2: Overhead Tactical
-float g_camOrbitYaw = 0.0f;
 float g_camOrbitPitch = 0.0f;
 
 // Flight kinematics
@@ -86,7 +89,6 @@ float g_wingPhase = 0.0f;
 // Harvester state
 float g_harvX = -80.0f;
 float g_harvZ = 15.0f;
-float g_harvSpeed = 3.2f;
 
 // Dynamic Spice Tanks
 struct SpiceTankInstance {
@@ -95,13 +97,12 @@ struct SpiceTankInstance {
     float scale;
 };
 std::vector<SpiceTankInstance> g_tanks;
-float g_lastTankDist = -80.0f;
 
 // =============================================================================
 // DUNE TERRAIN HEIGHTFIELD FUNCTION
 // Continuous procedural analytical surface for seamless rolling dunes
 // =============================================================================
-float getDuneHeight(float x, float z) {
+float rawDuneHeight(float x, float z) {
     // Primary sweeping barchan dune swells
     float h1 = std::sin(x * 0.009f + z * 0.004f) * 14.0f;
     float h2 = std::cos(x * 0.004f - z * 0.012f) * 9.5f;
@@ -116,6 +117,18 @@ float getDuneHeight(float x, float z) {
     return h1 + h2 + ridge + h3 - 4.0f;
 }
 
+float getDuneHeight(float x, float z) {
+    float height = rawDuneHeight(x, z);
+    // Level the landing pad into the dunes; evacuation sites stay natural.
+    static const glm::vec3 terraces[] = {{55, 55, rawDuneHeight(55, 55)}};
+    for (const auto& center : terraces) {
+        float radius = center.x == 55 ? 15.0f : 10.0f;
+        float blend = 1.0f - glm::smoothstep(radius, radius + 10, glm::distance(glm::vec2(x, z), glm::vec2(center)));
+        height = glm::mix(height, center.z, blend);
+    }
+    return height;
+}
+
 glm::vec3 getDuneNormal(float x, float z) {
     float eps = 0.4f;
     float hL = getDuneHeight(x - eps, z);
@@ -124,6 +137,9 @@ glm::vec3 getDuneNormal(float x, float z) {
     float hU = getDuneHeight(x, z + eps);
     return glm::normalize(glm::vec3(-(hR - hL), 2.0f * eps, -(hU - hD)));
 }
+
+#include "arrakis_game.h"
+#include "arrakis_tests.h"
 
 // =============================================================================
 // WIND & PARTICLE SYSTEM
@@ -163,7 +179,7 @@ void initParticles() {
 
 void updateParticles(float dt, glm::vec3 centerPos, glm::vec3 harvPos) {
     float gust = 1.0f + 0.35f * std::sin((float)glfwGetTime() * 1.8f);
-    std::mt19937 rng((unsigned int)(glfwGetTime() * 1000.0f));
+    static std::mt19937 rng(1984);
     std::uniform_real_distribution<float> distOffset(-100.0f, 100.0f);
     std::uniform_real_distribution<float> distY(0.2f, 32.0f);
 
@@ -181,17 +197,34 @@ void updateParticles(float dt, glm::vec3 centerPos, glm::vec3 harvPos) {
 
         // Respawn if life expired or drifted too far from camera/player
         float distToPlayer = glm::distance(glm::vec2(p.pos.x, p.pos.z), glm::vec2(centerPos.x, centerPos.z));
-        if (p.life <= 0.0f || distToPlayer > 130.0f) {
+        if (p.life <= 0.0f || (distToPlayer > 160.0f && i % 4 != 0 && i % 3 != 0)) {
             p.life = 2.0f + (rng() % 100) * 0.02f;
             p.maxLife = p.life;
 
             // Half particles spawn upwind from player, some spawn behind harvester crawler treads
-            if (i % 4 == 0) {
+            if (i % 4 == 0 && wormAttackTime() < 12) {
                 // Crawler dust plume
-                p.pos = harvPos + glm::vec3(-4.0f + (rng() % 80) * 0.1f, 1.0f + (rng() % 30) * 0.1f, -1.0f + (rng() % 60) * 0.1f);
-                p.vel = WIND_DIR * (WIND_BASE_SPEED * 0.9f) + glm::vec3(0.0f, 2.5f, 0.0f);
+                glm::vec3 forward = harvesterForward(g_mission.harvesterYaw);
+                glm::vec3 right = glm::cross(forward, glm::vec3(0, 1, 0));
+                p.pos = harvPos - forward * 4.0f + right * (-4.0f + (rng() % 80) * 0.1f)
+                    + glm::vec3(0, 1.0f + (rng() % 30) * 0.1f, 0);
+                p.vel = WIND_DIR * (WIND_BASE_SPEED * 0.5f) - forward * 2.0f + glm::vec3(0, 2.5f, 0);
                 p.alpha = 0.55f;
                 p.size = 0.45f;
+            } else if (i % 3 == 0 && wormAttackTime() < 18) {
+                glm::vec3 worm = wormPosition();
+                float a = (rng() % 10000) * 0.0006283185f;
+                float radius = 10 + (rng() % 1500) * 0.01f;
+                p.pos = worm + glm::vec3(std::cos(a) * radius - (rng() % 2200) * 0.01f, 0, std::sin(a) * radius);
+                p.pos.y = getDuneHeight(p.pos.x, p.pos.z) + 0.8f;
+                p.vel = glm::vec3(std::cos(a) * 7, wormAttackTime() > 0 ? 10 : 2, std::sin(a) * 7) + WIND_DIR * 4.0f;
+                p.size = wormAttackTime() > 0 ? 5.5f : 2.2f;
+                p.alpha = 0.22f;
+            } else if (i % 5 == 0 && g_keys[GLFW_KEY_SPACE]) {
+                float a = (rng() % 1000) * 0.006283185f;
+                p.pos = centerPos + glm::vec3(std::cos(a) * 4, -4, std::sin(a) * 4);
+                p.vel = glm::vec3(std::cos(a) * 11, 1.5f, std::sin(a) * 11);
+                p.size = 1.8f; p.alpha = 0.18f;
             } else {
                 glm::vec3 upwind = -WIND_DIR * 90.0f;
                 p.pos = centerPos + upwind + glm::vec3(distOffset(rng), distY(rng), distOffset(rng));
@@ -314,8 +347,8 @@ Mesh createCylinder(int slices = 24) {
     }
     for (int i = 0; i < slices; ++i) {
         idx.push_back(topCenter);
-        idx.push_back(topCenter + 1 + i);
         idx.push_back(topCenter + 1 + i + 1);
+        idx.push_back(topCenter + 1 + i);
     }
 
     // Bottom cap (-Y)
@@ -327,8 +360,8 @@ Mesh createCylinder(int slices = 24) {
     }
     for (int i = 0; i < slices; ++i) {
         idx.push_back(btmCenter);
-        idx.push_back(btmCenter + 1 + i + 1);
         idx.push_back(btmCenter + 1 + i);
+        idx.push_back(btmCenter + 1 + i + 1);
     }
 
     return uploadMesh(v, idx);
@@ -363,12 +396,12 @@ Mesh createSphere(int lats = 16, int lons = 24) {
             unsigned int second = first + lons + 1;
 
             idx.push_back(first);
-            idx.push_back(second);
             idx.push_back(first + 1);
+            idx.push_back(second);
 
             idx.push_back(second);
-            idx.push_back(second + 1);
             idx.push_back(first + 1);
+            idx.push_back(second + 1);
         }
     }
 
@@ -466,6 +499,46 @@ Mesh createQuad() {
     return uploadMesh(v, idx);
 }
 
+Mesh createRing() {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    for (int i = 0; i <= 80; ++i) for (int j = 0; j <= 8; ++j) {
+        float a = i * glm::two_pi<float>() / 80;
+        float b = j * glm::two_pi<float>() / 8;
+        glm::vec3 n(std::cos(a) * std::cos(b), std::sin(b), std::sin(a) * std::cos(b));
+        vertices.push_back({glm::vec3(std::cos(a), 0, std::sin(a)) + n * 0.025f, n, {i / 80.0f, j / 8.0f}});
+    }
+    for (int i = 0; i < 80; ++i) for (int j = 0; j < 8; ++j) {
+        unsigned int a = i * 9 + j, b = a + 9;
+        indices.insert(indices.end(), {a, a + 1, b, b, a + 1, b + 1});
+    }
+    return uploadMesh(vertices, indices);
+}
+
+Mesh createErodedRock() {
+    std::vector<Vertex> v;
+    std::vector<unsigned int> idx;
+    auto point = [](int lat, int lon) {
+        float a = lat * glm::pi<float>() / 8, b = lon * glm::two_pi<float>() / 13;
+        float erosion = 0.83f + 0.13f * std::sin(lon * 7.1f + lat * 2.3f) + 0.08f * std::cos(lat * 5.4f);
+        return glm::vec3(std::sin(a) * std::cos(b) * erosion, std::cos(a), std::sin(a) * std::sin(b) * erosion) * 0.5f;
+    };
+    auto tri = [&](glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+        glm::vec3 n = glm::cross(b - a, c - a);
+        if (glm::length(n) < 0.00001f) return;
+        if (glm::dot(n, a + b + c) < 0) { std::swap(b, c); n = -n; }
+        n = glm::normalize(n);
+        unsigned int start = static_cast<unsigned int>(v.size());
+        v.insert(v.end(), {{a, n, {0, 0}}, {b, n, {1, 0}}, {c, n, {1, 1}}});
+        idx.insert(idx.end(), {start, start + 1, start + 2});
+    };
+    for (int i = 0; i < 8; ++i) for (int j = 0; j < 13; ++j) {
+        tri(point(i, j), point(i + 1, j), point(i, j + 1));
+        tri(point(i, j + 1), point(i + 1, j), point(i + 1, j + 1));
+    }
+    return uploadMesh(v, idx);
+}
+
 // =============================================================================
 // GLOBAL MESH ASSETS
 // =============================================================================
@@ -475,6 +548,11 @@ Mesh g_meshSphere;
 Mesh g_meshWing;
 Mesh g_meshTerrain;
 Mesh g_meshQuad;
+Mesh g_meshRing;
+Mesh g_meshRock;
+unsigned int g_particleInstanceVBO = 0;
+struct ParticleInstance { glm::vec4 posSize; glm::vec4 colorAlpha; };
+std::vector<ParticleInstance> g_particleInstances;
 
 // =============================================================================
 // SHADERS & UNIFORMS
@@ -491,6 +569,9 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightSpaceMatrix;
+uniform vec3 wormCenter;
+uniform float collapse;
+uniform int isSand;
 
 out vec3 FragPos;
 out vec3 Normal;
@@ -499,6 +580,10 @@ out vec4 FragPosLight;
 
 void main(){
     vec4 worldPos = model * vec4(aPos, 1.0);
+    if(isSand == 1) {
+        float d = length(worldPos.xz - wormCenter.xz);
+        worldPos.y -= collapse * (1.0 - smoothstep(5.0, 48.0, d)) * 13.0;
+    }
     FragPos = worldPos.xyz;
     Normal = mat3(transpose(inverse(model))) * aNorm;
     TexCoord = aUV;
@@ -535,20 +620,27 @@ uniform float fogDensity;
 float calcShadow(vec4 fragLight, vec3 norm){
     vec3 proj = fragLight.xyz / fragLight.w;
     proj = proj * 0.5 + 0.5;
-    if(proj.z > 1.0) return 0.0;
+    // Receiver-plane depth adjustment prevents PCF striping at grazing sunlight.
+    vec3 dx = dFdx(proj), dy = dFdy(proj);
+    float determinant = dx.x * dy.y - dx.y * dy.x;
+    vec2 depthSlope = vec2(0);
+    if(abs(determinant) > 0.000000001)
+        depthSlope = vec2(dx.z * dy.y - dy.z * dx.y, dx.x * dy.z - dy.x * dx.z) / determinant;
+    if(proj.z > 1.0 || proj.z < 0.0 || any(lessThan(proj.xy, vec2(0))) || any(greaterThan(proj.xy, vec2(1)))) return 0.0;
 
     float bias = max(0.0035 * (1.0 - dot(norm, lightDir)), 0.0008);
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 
-    // 3x3 PCF filter for soft shadow edges
-    for(int x = -1; x <= 1; ++x){
-        for(int y = -1; y <= 1; ++y){
-            float pcfDepth = texture(shadowMap, proj.xy + vec2(x,y) * texelSize).r;
-            shadow += (proj.z - bias > pcfDepth) ? 1.0 : 0.0;
+    // 5x5 PCF with a slope-corrected receiver depth at each sample.
+    for(int x = -2; x <= 2; ++x){
+        for(int y = -2; y <= 2; ++y){
+            vec2 offset = vec2(x,y) * texelSize;
+            float pcfDepth = texture(shadowMap, proj.xy + offset).r;
+            shadow += (proj.z + dot(depthSlope, offset) - bias > pcfDepth) ? 1.0 : 0.0;
         }
     }
-    return shadow / 9.0;
+    return shadow / 25.0;
 }
 
 void main(){
@@ -558,6 +650,11 @@ void main(){
     vec3 H = normalize(L + V);
 
     vec3 baseCol = objectColor;
+    if(isSand == 2) {
+        float grain = fract(sin(dot(FragPos, vec3(12.3, 42.8, 27.1))) * 43758.5453);
+        float layers = sin(FragPos.y * 5.0 + sin(FragPos.x * 0.8));
+        baseCol *= 0.88 + 0.12 * layers + 0.07 * grain;
+    }
 
     // Procedural Dune Sand Micro-Shading
     if(isSand == 1){
@@ -569,12 +666,15 @@ void main(){
         // Slope shading (crests are sun-bleached golden, valleys are deeper ochre)
         float slope = clamp(dot(N, vec3(0, 1, 0)), 0.0, 1.0);
         baseCol = mix(baseCol * 0.82, baseCol * 1.15, slope);
-        baseCol += vec3(0.035, 0.02, 0.008) * (ripple - 0.5);
+        float fade = 1.0 - smoothstep(25.0, 120.0, length(viewPos - FragPos));
+        baseCol += vec3(0.035, 0.02, 0.008) * (ripple - 0.5) * fade;
+        N = normalize(N + vec3(cos(FragPos.x * 2.2 + FragPos.z * 1.4) * 0.055, 0,
+                               cos(FragPos.x * 2.2 + FragPos.z * 1.4) * 0.035) * fade);
 
         // Subtle quartz sand sparkle under direct sun
         float sparkle = pow(max(dot(N, H), 0.0), 120.0);
         float noise = fract(sin(dot(FragPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
-        if(noise > 0.88) baseCol += vec3(0.35, 0.3, 0.22) * sparkle;
+        if(noise > 0.88) baseCol += vec3(0.35, 0.3, 0.22) * sparkle * fade;
     }
 
     // Ambient Term (warm bounce light from vast desert sand)
@@ -599,8 +699,8 @@ void main(){
     float fogFactor = 1.0 - exp(-pow(dist * fogDensity, 2.0));
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
-    vec3 finalColor = mix(litColor, fogColor, fogFactor);
-    FragColor = vec4(finalColor, 1.0);
+    vec3 mapped = pow(litColor / (litColor + vec3(0.8)), vec3(1.0 / 1.8));
+    FragColor = vec4(mix(mapped, fogColor, fogFactor), 1.0);
 }
 )";
 
@@ -610,8 +710,13 @@ const char* SHADOW_VERT = R"(
 layout(location=0) in vec3 aPos;
 uniform mat4 lightSpaceMatrix;
 uniform mat4 model;
+uniform vec3 wormCenter;
+uniform float collapse;
+uniform int isSand;
 void main(){
-    gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
+    vec4 p = model * vec4(aPos, 1.0);
+    if(isSand == 1) p.y -= collapse * (1.0 - smoothstep(5.0, 48.0, length(p.xz - wormCenter.xz))) * 13.0;
+    gl_Position = lightSpaceMatrix * p;
 }
 )";
 const char* SHADOW_FRAG = R"(
@@ -624,19 +729,21 @@ const char* PARTICLE_VERT = R"(
 #version 330 core
 layout(location=0) in vec3 aPos;
 layout(location=2) in vec2 aUV;
+layout(location=3) in vec4 instancePosSize;
+layout(location=4) in vec4 instanceColorAlpha;
 
 uniform mat4 view;
 uniform mat4 projection;
-uniform vec3 particlePos;
-uniform float particleSize;
 uniform vec3 camRight;
 uniform vec3 camUp;
 
 out vec2 TexCoord;
+out vec4 ColorAlpha;
 
 void main(){
     TexCoord = aUV;
-    vec3 worldPos = particlePos + camRight * (aPos.x * particleSize) + camUp * (aPos.y * particleSize);
+    ColorAlpha = instanceColorAlpha;
+    vec3 worldPos = instancePosSize.xyz + camRight * (aPos.x * instancePosSize.w) + camUp * (aPos.y * instancePosSize.w);
     gl_Position = projection * view * vec4(worldPos, 1.0);
 }
 )";
@@ -646,18 +753,17 @@ const char* PARTICLE_FRAG = R"(
 in vec2 TexCoord;
 out vec4 FragColor;
 
-uniform float particleAlpha;
-uniform vec3  particleColor;
+in vec4 ColorAlpha;
 
 void main(){
     float dist = length(TexCoord - vec2(0.5));
     if(dist > 0.5) discard;
-    float soft = smoothstep(0.5, 0.0, dist);
-    FragColor = vec4(particleColor, soft * particleAlpha);
+    float soft = 1.0 - smoothstep(0.0, 0.5, dist);
+    FragColor = vec4(ColorAlpha.rgb, soft * ColorAlpha.a);
 }
 )";
 
-// 4. Cinematic Skybox Shader (Arrakis Amber & Sun Corona)
+// 4. Clear Blue-Gold Desert Sky and Sun
 const char* SKY_VERT = R"(
 #version 330 core
 layout(location=0) in vec3 aPos;
@@ -665,7 +771,9 @@ out vec3 RayDir;
 uniform mat4 invViewProj;
 
 void main(){
-    RayDir = aPos;
+    vec4 farPoint = invViewProj * vec4(aPos.xy, 1.0, 1.0);
+    vec4 nearPoint = invViewProj * vec4(aPos.xy, -1.0, 1.0);
+    RayDir = farPoint.xyz / farPoint.w - nearPoint.xyz / nearPoint.w;
     gl_Position = vec4(aPos.xy, 0.9999, 1.0);
 }
 )";
@@ -681,16 +789,19 @@ uniform vec3 sunColor;
 void main(){
     vec3 rd = normalize(RayDir);
 
-    // Warm desert atmospheric gradient: horizon haze to deep amber zenith
-    vec3 horizonDust = vec3(0.88, 0.58, 0.28);
-    vec3 zenithAmber = vec3(0.55, 0.26, 0.08);
-    vec3 skyBase = mix(horizonDust, zenithAmber, pow(clamp(rd.y + 0.15, 0.0, 1.0), 0.75));
+    // No cloud noise: golden sand haze fades into a clean blue atmosphere.
+    vec3 horizonDust = vec3(0.90, 0.74, 0.47);
+    vec3 lowBlue = vec3(0.48, 0.69, 0.88);
+    vec3 zenithBlue = vec3(0.10, 0.34, 0.72);
+    float elevation = clamp(rd.y, 0.0, 1.0);
+    vec3 skyBase = mix(horizonDust, lowBlue, smoothstep(0.0, 0.13, elevation));
+    skyBase = mix(skyBase, zenithBlue, pow(elevation, 0.65));
 
-    // Blinding Arrakis Sun Disk + Atmospheric Corona
+    // Crisp warm sun disk surrounded by a restrained atmospheric halo.
     float sunDot = max(dot(rd, normalize(lightDir)), 0.0);
-    float sunDisk   = pow(sunDot, 1200.0) * 3.5;
-    float sunCorona = pow(sunDot, 16.0)   * 0.65;
-    float sunHaze   = pow(sunDot, 3.0)    * 0.25;
+    float sunDisk = smoothstep(cos(radians(0.80)), cos(radians(0.58)), sunDot) * 1.9;
+    float sunCorona = pow(sunDot, 180.0) * 0.30;
+    float sunHaze = pow(sunDot, 12.0) * 0.10;
 
     vec3 finalSky = skyBase + (sunDisk + sunCorona + sunHaze) * sunColor;
     FragColor = vec4(finalSky, 1.0);
@@ -700,6 +811,7 @@ void main(){
 // =============================================================================
 // SHADER COMPILATION & MANAGEMENT
 // =============================================================================
+bool g_shaderOkay = true;
 unsigned int compileShaderModule(GLenum type, const char* src) {
     unsigned int s = glCreateShader(type);
     glShaderSource(s, 1, &src, nullptr);
@@ -709,6 +821,7 @@ unsigned int compileShaderModule(GLenum type, const char* src) {
     if (!ok) {
         glGetShaderInfoLog(s, 512, nullptr, log);
         std::cerr << "[Shader Error]: " << log << std::endl;
+        g_shaderOkay = false;
     }
     return s;
 }
@@ -725,6 +838,7 @@ unsigned int buildProgram(const char* vs, const char* fs) {
     if (!ok) {
         glGetProgramInfoLog(p, 512, nullptr, log);
         std::cerr << "[Program Error]: " << log << std::endl;
+        g_shaderOkay = false;
     }
     glDeleteShader(v);
     glDeleteShader(f);
@@ -757,22 +871,26 @@ void setupShadowFramebuffer() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, g_shadowTex, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Shadow framebuffer is incomplete\n";
+        g_shaderOkay = false;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 // Skybox fullscreen quad VAO
 unsigned int g_skyVAO = 0;
+unsigned int g_skyVBO = 0;
 void setupSkyVAO() {
     float verts[] = {
         -1.0f, -1.0f, 0.0f,
          3.0f, -1.0f, 0.0f,
         -1.0f,  3.0f, 0.0f
     };
-    unsigned int vbo;
     glGenVertexArrays(1, &g_skyVAO);
-    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &g_skyVBO);
     glBindVertexArray(g_skyVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, g_skyVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -793,15 +911,24 @@ struct Material {
 };
 
 void drawMeshPrimitive(const Mesh& mesh, const glm::mat4& model, const Material& mat) {
+    static const GLint shadowModel = glGetUniformLocation(g_progShadow, "model");
+    static const GLint shadowSand = glGetUniformLocation(g_progShadow, "isSand");
+    static const GLint modelLoc = glGetUniformLocation(g_progScene, "model");
+    static const GLint colorLoc = glGetUniformLocation(g_progScene, "objectColor");
+    static const GLint specLoc = glGetUniformLocation(g_progScene, "specularColor");
+    static const GLint shineLoc = glGetUniformLocation(g_progScene, "shininess");
+    static const GLint emitLoc = glGetUniformLocation(g_progScene, "emissiveColor");
+    static const GLint sandLoc = glGetUniformLocation(g_progScene, "isSand");
     if (g_isShadowPass) {
-        glUniformMatrix4fv(glGetUniformLocation(g_progShadow, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(shadowModel, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(shadowSand, mat.isSand);
     } else {
-        glUniformMatrix4fv(glGetUniformLocation(g_progScene, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glUniform3fv(glGetUniformLocation(g_progScene, "objectColor"), 1, glm::value_ptr(mat.diffuse));
-        glUniform3fv(glGetUniformLocation(g_progScene, "specularColor"), 1, glm::value_ptr(mat.specular));
-        glUniform1f (glGetUniformLocation(g_progScene, "shininess"), mat.shininess);
-        glUniform3fv(glGetUniformLocation(g_progScene, "emissiveColor"), 1, glm::value_ptr(mat.emissive));
-        glUniform1i (glGetUniformLocation(g_progScene, "isSand"), mat.isSand);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform3fv(colorLoc, 1, glm::value_ptr(mat.diffuse));
+        glUniform3fv(specLoc, 1, glm::value_ptr(mat.specular));
+        glUniform1f(shineLoc, mat.shininess);
+        glUniform3fv(emitLoc, 1, glm::value_ptr(mat.emissive));
+        glUniform1i(sandLoc, mat.isSand);
     }
     glBindVertexArray(mesh.VAO);
     glDrawElements(mesh.drawMode, mesh.indexCount, GL_UNSIGNED_INT, 0);
@@ -821,7 +948,7 @@ void drawPart(const Mesh& mesh, glm::mat4 root, glm::vec3 t, glm::vec3 rDeg, glm
 // =============================================================================
 // COLOR PALETTE (CINEMATIC DUNE)
 // =============================================================================
-const glm::vec3 COL_DUNE_SAND     (0.85f, 0.62f, 0.35f);
+const glm::vec3 COL_DUNE_SAND     (0.76f, 0.49f, 0.23f);
 const glm::vec3 COL_DUNE_SHADOW   (0.55f, 0.36f, 0.18f);
 const glm::vec3 COL_ATREIDES_HULL (0.22f, 0.23f, 0.22f); // Matte carbon stealth grey
 const glm::vec3 COL_ATREIDES_DARK (0.13f, 0.14f, 0.13f);
@@ -963,10 +1090,12 @@ void drawMovieOrnithopter(glm::mat4 root, float wingPhase, float roll, float pit
         float pitchTwist = std::cos(wingPhase) * 8.0f * (float)w.side;
         wm = glm::rotate(wm, glm::radians(pitchTwist), glm::vec3(1, 0, 0));
 
-        // Mirrored scale for port side
+        // Mirroring reverses winding; render both sides of thin aerofoils.
         wm = glm::scale(wm, glm::vec3(w.side * 5.2f, 1.0f, 1.0f));
 
+        glDisable(GL_CULL_FACE);
         drawMeshPrimitive(g_meshWing, wm, matBlade);
+        glEnable(GL_CULL_FACE);
     }
 }
 
@@ -998,13 +1127,22 @@ void drawSpiceHarvester(glm::mat4 root, float crawlerAnim) {
             // Drive sprockets & road wheels
             for (float wz = -1.4f; wz <= 1.4f; wz += 0.93f) {
                 drawPart(g_meshCylinder, tm, {ox > 0 ? 0.95f : -0.95f, -0.2f, wz}, {0, 0, 90}, {1.2f, 0.35f, 1.2f}, matChassis);
+                drawPart(g_meshCube, tm, {ox > 0 ? 1.15f : -1.15f, -0.2f, wz}, {crawlerAnim * 80, 0, 0}, {0.04f, 0.95f, 0.12f}, matRust);
+            }
+            for (int pad = 0; pad < 10; ++pad) {
+                float a = pad * glm::two_pi<float>() / 10 + crawlerAnim * 0.7f;
+                float angle = -glm::degrees(std::atan2(0.85f * std::cos(a), -1.8f * std::sin(a)));
+                drawPart(g_meshCube, tm, {0, 0.85f * std::sin(a), 1.8f * std::cos(a)}, {angle, 0, 0}, {1.9f, 0.12f, 0.38f}, matRust);
             }
         }
     }
 
     // --- Forward Harvesting Cutter Drum / Scoop ---
     // Massive rotating cylinder with teeth
-    drawPart(g_meshCylinder, root, {0.0f, 1.1f, -4.2f}, {0, 0, 90}, {2.2f, 8.8f, 2.2f}, matRust);
+    drawPart(g_meshCylinder, root, {0.0f, 1.1f, -4.2f}, {crawlerAnim * 70, 0, 90}, {2.2f, 8.8f, 2.2f}, matRust);
+    Material matDoor; matDoor.diffuse = {0.06f, 0.07f, 0.06f};
+    drawPart(g_meshCube, root, {4.78f, 1.8f, 1.2f}, {0, 0, 0}, {0.12f, 2.4f, 1.5f}, matDoor);
+    drawPart(g_meshCube, root, {5.5f, 0.45f, 1.2f}, {0, 0, -16}, {2, 0.15f, 1.7f}, matChassis);
     // Glowing spice intake suction scoop inside drum
     drawPart(g_meshCube, root, {0.0f, 0.9f, -4.8f}, {15, 0, 0}, {8.2f, 0.6f, 1.4f}, matSpice);
 
@@ -1078,16 +1216,79 @@ void drawDesertRockFormation(glm::mat4 root, int variant) {
     Material matStrata1; matStrata1.diffuse = COL_ROCK_STRATA1; matStrata1.specular = glm::vec3(0.15f); matStrata1.shininess = 16.0f;
     Material matStrata2; matStrata2.diffuse = COL_ROCK_STRATA2; matStrata2.specular = glm::vec3(0.12f); matStrata2.shininess = 12.0f;
 
-    // Multi-tier angular boulder stack simulating wind erosion yardangs
-    drawPart(g_meshCube, root, { 0.0f, 2.2f,  0.0f}, {12,  25,  -8}, {5.2f, 4.4f, 4.8f}, matStrata1);
-    drawPart(g_meshCube, root, { 0.6f, 5.2f, -0.4f}, {-8,  55,  14}, {3.6f, 3.2f, 3.4f}, matStrata2);
-    drawPart(g_meshCube, root, { 0.2f, 7.4f, -0.8f}, {22, -15,  10}, {2.2f, 2.4f, 2.1f}, matStrata1);
-    drawPart(g_meshCube, root, {-1.8f, 1.2f,  1.4f}, { 5, -40,  12}, {3.2f, 2.4f, 2.8f}, matStrata2);
-    drawPart(g_meshCube, root, { 2.2f, 0.8f, -1.6f}, {14,  30, -18}, {2.8f, 1.6f, 2.6f}, matStrata1);
+    matStrata1.isSand = matStrata2.isSand = 2;
+    drawPart(g_meshRock, root, {0, 2.2f, 0}, {8, float(variant * 19), -5}, {8, 7, 6}, matStrata1);
+    drawPart(g_meshRock, root, {1, 5, -1}, {0, 55, 10}, {5, 5, 4}, matStrata2);
+    drawPart(g_meshRock, root, {-3, 0.8f, 2}, {5, -40, 12}, {4, 3, 3}, matStrata2);
+    drawPart(g_meshRock, root, {3.2f, 0.3f, 2.2f}, {15, 70, 20}, {2.2f, 1.6f, 2.1f}, matStrata1);
+}
 
-    // Talus boulder debris around base
-    drawPart(g_meshCube, root, {-2.8f, 0.4f, -2.0f}, {30, 45, 10}, {1.4f, 0.8f, 1.2f}, matStrata2);
-    drawPart(g_meshCube, root, { 3.2f, 0.3f,  2.2f}, {15, 70, 20}, {1.2f, 0.6f, 1.1f}, matStrata1);
+#include "arrakis_worm.h"
+#include "arrakis_hud.h"
+
+void drawRescueWorld(float time) {
+    Material cyan; cyan.diffuse = {0.05f, 0.5f, 0.55f}; cyan.emissive = {0.03f, 0.6f, 0.65f};
+    Material amber; amber.diffuse = {0.9f, 0.5f, 0.1f}; amber.emissive = {0.6f, 0.25f, 0.03f};
+    Material dark; dark.diffuse = {0.16f, 0.19f, 0.19f};
+    Material cloth; cloth.diffuse = {0.30f, 0.24f, 0.17f}; cloth.specular = {0.03f, 0.03f, 0.03f};
+    Material visor; visor.diffuse = {0.08f, 0.20f, 0.27f}; visor.specular = {0.8f, 0.8f, 0.8f}; visor.shininess = 90;
+    glm::mat4 base = glm::translate(glm::mat4(1), g_mission.base);
+    drawPart(g_meshCylinder, base, {0, 0.25f, 0}, {0, 0, 0}, {24, 0.5f, 24}, dark);
+    drawPart(g_meshRing, base, {0, 0.55f, 0}, {0, 0, 0}, {11, 1, 11}, cyan);
+    drawPart(g_meshCube, base, {0, 0.56f, 0}, {0, 0, 0}, {1.2f, 0.05f, 10}, cyan);
+    drawPart(g_meshCube, base, {0, 0.56f, 0}, {0, 0, 0}, {10, 0.05f, 1.2f}, cyan);
+    for (int i = 0; i < 4; ++i) {
+        float a = i * glm::half_pi<float>();
+        drawPart(g_meshCylinder, base, {std::cos(a) * 13, 2, std::sin(a) * 13}, {0, 0, 0}, {0.2f, 4, 0.2f}, dark);
+        drawPart(g_meshSphere, base, {std::cos(a) * 13, 4.1f, std::sin(a) * 13}, {0, 0, 0}, {0.65f, 0.65f, 0.65f}, cyan);
+    }
+    for (int groupIndex = 0; groupIndex < static_cast<int>(g_mission.groups.size()); ++groupIndex) {
+        const auto& group = g_mission.groups[groupIndex];
+        if (!group.released) continue;
+        int waiting = 0;
+        for (const auto& c : g_mission.crew)
+            if (c.group == groupIndex && (c.state == CrewState::Running || c.state == CrewState::Waiting)) ++waiting;
+        if (waiting == 0) continue;
+        glm::vec3 p = group.center;
+        p.y = getDuneHeight(p.x, p.z) + 0.2f;
+        glm::mat4 ring = glm::translate(glm::mat4(1), p);
+        glm::vec3 normal = getDuneNormal(p.x, p.z), axis = glm::cross(glm::vec3(0, 1, 0), normal);
+        if (glm::length(axis) > 0.001f) ring = glm::rotate(ring, std::acos(glm::clamp(normal.y, -1.0f, 1.0f)), glm::normalize(axis));
+        drawPart(g_meshRing, ring, {0, 0, 0}, {0, 0, 0}, {4.5f, 1, 4.5f}, amber);
+        drawPart(g_meshCylinder, glm::translate(glm::mat4(1), p), {4, 2, 0}, {0, 0, 0}, {0.12f, 4, 0.12f}, dark);
+        drawPart(g_meshSphere, glm::translate(glm::mat4(1), p), {4, 4.1f, 0}, {0, 0, 0}, {0.5f, 0.5f, 0.5f}, amber);
+    }
+    for (int i = 0; i < int(g_mission.crew.size()); ++i) {
+        const auto& c = g_mission.crew[i];
+        if (c.state != CrewState::Waiting && c.state != CrewState::Running) continue;
+        glm::vec3 crewPosition = c.pos;
+        if (i == g_mission.target && g_mission.pickup > 0)
+            crewPosition.y += (g_ornPos.y - crewPosition.y - 1.8f) * glm::smoothstep(0.0f, 1.0f, g_mission.pickup);
+        glm::mat4 root = glm::translate(glm::mat4(1), crewPosition);
+        float stride = c.state == CrewState::Running ? std::sin(time * 11 + i) * 24 : std::sin(time * 2 + i) * 4;
+        drawPart(g_meshSphere, root, {0, 1.05f, 0}, {0, 0, 0}, {0.55f, 0.85f, 0.4f}, cloth);
+        drawPart(g_meshSphere, root, {0, 1.65f, 0}, {0, 0, 0}, {0.43f, 0.46f, 0.43f}, cloth);
+        drawPart(g_meshSphere, root, {0, 1.67f, 0.17f}, {0, 0, 0}, {0.32f, 0.15f, 0.10f}, visor);
+        for (int side : {-1, 1}) {
+            drawPart(g_meshCylinder, root, {side * 0.14f, 0.4f, 0}, {side * stride, 0, 0}, {0.17f, 0.8f, 0.17f}, cloth);
+            drawPart(g_meshCylinder, root, {side * 0.34f, 1.1f, 0}, {-side * stride, 0, side * 14.0f}, {0.15f, 0.7f, 0.15f}, cloth);
+        }
+        drawPart(g_meshSphere, root, {0, 2.25f, 0}, {0, 0, 0}, {0.18f, 0.18f, 0.18f}, cyan);
+    }
+    if (g_mission.pickup > 0 && g_mission.target >= 0) {
+        glm::vec3 end = g_mission.crew[g_mission.target].pos + glm::vec3(0, 1, 0);
+        end.y += (g_ornPos.y - end.y - 0.8f) * glm::smoothstep(0.0f, 1.0f, g_mission.pickup);
+        glm::vec3 start = g_ornPos - glm::vec3(0, 0.7f, 0);
+        glm::vec3 dir = end - start;
+        float length = glm::length(dir);
+        glm::mat4 rope = glm::translate(glm::mat4(1), (start + end) * 0.5f);
+        glm::vec3 axis = glm::cross(glm::vec3(0, 1, 0), dir / length);
+        if (glm::length(axis) > 0.001f) rope = glm::rotate(rope, std::acos(glm::clamp(dir.y / length, -1.0f, 1.0f)), glm::normalize(axis));
+        else if (dir.y < 0) rope = glm::rotate(rope, glm::pi<float>(), glm::vec3(1, 0, 0));
+        drawPart(g_meshCylinder, rope, {0, 0, 0}, {0, 0, 0}, {0.055f, length, 0.055f}, cyan);
+    }
+    drawSandworm(wormPosition(), wormAttackTime(), time, g_mission.wormYaw,
+                 glm::clamp(g_mission.elapsed / g_mission.breachAt, 0.0f, 1.0f));
 }
 
 // =============================================================================
@@ -1104,7 +1305,7 @@ void drawFullScene(float curTime) {
     drawMeshPrimitive(g_meshTerrain, glm::mat4(1.0f), matSand);
 
     // 2. Movie-Accurate Atreides Ornithopter
-    {
+    if (!g_mission.planeLost) {
         glm::mat4 om = glm::translate(glm::mat4(1.0f), g_ornPos);
         om = glm::rotate(om, glm::radians(g_ornYaw), glm::vec3(0, 1, 0));
         om = glm::rotate(om, glm::radians(g_ornPitch), glm::vec3(1, 0, 0));
@@ -1113,17 +1314,25 @@ void drawFullScene(float curTime) {
     }
 
     // 3. Massive Industrial Spice Harvester (hugging the dune surface!)
-    {
+    if (wormAttackTime() < 12) {
         float hy = getDuneHeight(g_harvX, g_harvZ);
+        float sink = glm::smoothstep(6.0f, 12.0f, wormAttackTime());
+        hy -= sink * 20;
         glm::mat4 hm = glm::translate(glm::mat4(1.0f), glm::vec3(g_harvX, hy, g_harvZ));
-        // Slight tilt matching dune slope
+        hm = glm::rotate(hm, glm::radians(g_mission.harvesterYaw), glm::vec3(0, 1, 0));
+        // Apply dune slope in the crawler's own forward/right axes.
         glm::vec3 hnorm = getDuneNormal(g_harvX, g_harvZ);
-        hm = glm::rotate(hm, -hnorm.x * 0.4f, glm::vec3(0, 0, 1));
-        drawSpiceHarvester(hm, curTime);
+        glm::vec3 forward = harvesterForward(g_mission.harvesterYaw);
+        glm::vec3 right = glm::cross(forward, glm::vec3(0, 1, 0));
+        hm = glm::rotate(hm, std::atan2(-glm::dot(hnorm, forward), hnorm.y), glm::vec3(1, 0, 0));
+        hm = glm::rotate(hm, std::atan2(-glm::dot(hnorm, right), hnorm.y), glm::vec3(0, 0, 1));
+        hm = glm::rotate(hm, sink * 0.8f, glm::vec3(1, 0, 0));
+        drawSpiceHarvester(hm, g_mission.harvesterTravel);
     }
 
     // 4. Dynamic Spice Tanks (deployed behind Harvester onto dune surface)
     for (const auto& tank : g_tanks) {
+        if (wormAttackTime() > 12) continue;
         float ty = getDuneHeight(tank.pos.x, tank.pos.z);
         glm::mat4 tm = glm::translate(glm::mat4(1.0f), glm::vec3(tank.pos.x, ty, tank.pos.z));
         tm = glm::rotate(tm, glm::radians(tank.yaw), glm::vec3(0, 1, 0));
@@ -1132,24 +1341,15 @@ void drawFullScene(float curTime) {
     }
 
     // 5. Desert Rock Yardang Crags (at natural elevated points across the desert)
-    static const glm::vec3 rockLocations[] = {
-        {  45.0f, 0.0f, -65.0f },
-        { -55.0f, 0.0f,  40.0f },
-        {  90.0f, 0.0f,  30.0f },
-        { -90.0f, 0.0f, -70.0f },
-        {  15.0f, 0.0f,  95.0f },
-        { -25.0f, 0.0f, -115.0f },
-        { 120.0f, 0.0f, -25.0f },
-        { -130.0f, 0.0f,  85.0f }
-    };
     for (int i = 0; i < 8; ++i) {
-        float rx = rockLocations[i].x;
-        float rz = rockLocations[i].z;
+        float rx = g_rockSites[i].x;
+        float rz = g_rockSites[i].y;
         float ry = getDuneHeight(rx, rz) - 0.5f;
         glm::mat4 rm = glm::translate(glm::mat4(1.0f), glm::vec3(rx, ry, rz));
         rm = glm::rotate(rm, glm::radians((float)(i * 45)), glm::vec3(0, 1, 0));
         drawDesertRockFormation(rm, i);
     }
+    drawRescueWorld(curTime);
 }
 
 // =============================================================================
@@ -1161,6 +1361,27 @@ void framebuffer_size_callback(GLFWwindow*, int w, int h) {
         g_scrH = h;
         glViewport(0, 0, w, h);
     }
+}
+
+void centerMouse(GLFWwindow* win) {
+    int width, height;
+    glfwGetWindowSize(win, &width, &height);
+    g_mouseHover = glm::vec2(0);
+    g_mouseTurnRate = 0;
+    glfwSetCursorPos(win, width * 0.5, height * 0.5);
+}
+
+void cursor_position_callback(GLFWwindow* win, double x, double y) {
+    if (g_mission.phase != MissionPhase::Flying || g_mission.paused
+        || !glfwGetWindowAttrib(win, GLFW_FOCUSED)) {
+        g_mouseHover = glm::vec2(0);
+        g_mouseTurnRate = 0;
+        return;
+    }
+    // Cursor coordinates are logical window pixels, not framebuffer pixels.
+    int width, height;
+    glfwGetWindowSize(win, &width, &height);
+    setMouseHover(x, y, width, height);
 }
 
 void key_callback(GLFWwindow* win, int key, int, int action, int) {
@@ -1178,6 +1399,16 @@ void key_callback(GLFWwindow* win, int key, int, int action, int) {
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
         g_camMode = (g_camMode + 1) % 3;
     }
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
+        if (g_mission.phase == MissionPhase::Title) resetMission(true);
+        else if (g_mission.phase == MissionPhase::Debrief) resetMission(true, true);
+        centerMouse(win);
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) { resetMission(true); centerMouse(win); }
+    if (key == GLFW_KEY_P && action == GLFW_PRESS && g_mission.phase == MissionPhase::Flying) {
+        g_mission.paused = !g_mission.paused;
+        centerMouse(win);
+    }
     if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
         g_isFullscreen = !g_isFullscreen;
         GLFWmonitor* primary = glfwGetPrimaryMonitor();
@@ -1187,13 +1418,36 @@ void key_callback(GLFWwindow* win, int key, int, int action, int) {
         } else {
             glfwSetWindowMonitor(win, nullptr, 100, 100, 1280, 720, 0);
         }
+        centerMouse(win);
     }
 }
 
 // =============================================================================
 // MAIN ENTRY POINT
 // =============================================================================
-int main() {
+bool captureScreenshot(const std::string& path) {
+    std::vector<unsigned char> pixels(static_cast<size_t>(g_scrW) * g_scrH * 4);
+    glReadPixels(0, 0, g_scrW, g_scrH, GL_BGRA, GL_UNSIGNED_BYTE, pixels.data());
+    std::ofstream out(path, std::ios::binary);
+    if (!out) return false;
+    auto word = [&](uint32_t value, int bytes) {
+        for (int i = 0; i < bytes; ++i) out.put(static_cast<char>((value >> (i * 8)) & 255));
+    };
+    out.put('B'); out.put('M'); word(static_cast<uint32_t>(54 + pixels.size()), 4);
+    word(0, 4); word(54, 4); word(40, 4); word(g_scrW, 4); word(g_scrH, 4);
+    word(1, 2); word(32, 2); word(0, 4); word(static_cast<uint32_t>(pixels.size()), 4);
+    word(0, 4); word(0, 4); word(0, 4); word(0, 4);
+    out.write(reinterpret_cast<const char*>(pixels.data()), static_cast<std::streamsize>(pixels.size()));
+    return out.good();
+}
+
+int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--test-game") return runMissionTests();
+    bool smokeTest = argc > 1 && std::string(argv[1]) == "--smoke-test";
+    bool breachTest = argc > 1 && std::string(argv[1]) == "--smoke-breach";
+    bool mouseTest = argc > 1 && std::string(argv[1]) == "--smoke-mouse";
+    bool pursuitTest = argc > 1 && std::string(argv[1]) == "--smoke-pursuit";
+    bool renderTest = smokeTest || breachTest || mouseTest || pursuitTest;
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
@@ -1205,18 +1459,17 @@ int main() {
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    g_scrW = mode->width;
-    g_scrH = mode->height;
 
     glfwWindowHint(GLFW_RED_BITS,     mode->redBits);
     glfwWindowHint(GLFW_GREEN_BITS,   mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS,    mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-    // Launch fullscreen
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    // Windowed startup leaves the desktop accessible; F11 enters fullscreen.
     g_window = glfwCreateWindow(g_scrW, g_scrH,
-        "ARRAKIS — Cinematic Dynamic Dune Simulation | CSE 4102 Project",
-        monitor, nullptr);
+        "ARRAKIS | Harvester Down - Desert Rescue",
+        nullptr, nullptr);
 
     if (!g_window) {
         std::cerr << "Window creation failed, falling back to windowed mode..." << std::endl;
@@ -1227,8 +1480,23 @@ int main() {
     }
 
     glfwMakeContextCurrent(g_window);
+    glfwGetFramebufferSize(g_window, &g_scrW, &g_scrH);
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
     glfwSetKeyCallback(g_window, key_callback);
+    glfwSetCursorPosCallback(g_window, cursor_position_callback);
+    glfwSetCursorEnterCallback(g_window, [](GLFWwindow*, int) {
+        g_mouseHover = glm::vec2(0);
+        g_mouseTurnRate = 0;
+    });
+    glfwSetWindowSizeCallback(g_window, [](GLFWwindow* win, int, int) { centerMouse(win); });
+    glfwSetWindowFocusCallback(g_window, [](GLFWwindow*, int focused) {
+        if (!focused) {
+            std::fill(std::begin(g_keys), std::end(g_keys), false);
+            g_mouseHover = glm::vec2(0);
+            g_mouseTurnRate = 0;
+            if (g_mission.phase == MissionPhase::Flying) g_mission.paused = true;
+        }
+    });
     glfwSwapInterval(1); // Enable VSync for buttery smooth frames
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -1238,13 +1506,14 @@ int main() {
     }
 
     std::cout << "========================================================\n";
-    std::cout << " ARRAKIS — Cinematic Dynamic Dune Scene\n";
+    std::cout << " ARRAKIS / Harvester Down / Desert Rescue\n";
     std::cout << " GPU: " << glGetString(GL_RENDERER) << "\n";
     std::cout << " OpenGL Version: " << glGetString(GL_VERSION) << "\n";
     std::cout << " Resolution: " << g_scrW << "x" << g_scrH << "\n";
     std::cout << "========================================================\n";
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -1254,8 +1523,11 @@ int main() {
     g_meshCylinder = createCylinder(24);
     g_meshSphere   = createSphere(16, 24);
     g_meshWing     = createWingBlade();
-    g_meshTerrain  = createDuneTerrain(140, 140, 700.0f);
+    g_meshTerrain  = createDuneTerrain(260, 260, 900.0f);
     g_meshQuad     = createQuad();
+    g_meshRing     = createRing();
+    g_meshRock     = createErodedRock();
+    initSandwormMeshes();
 
     // Compile shader programs
     g_progScene    = buildProgram(SCENE_VERT, SCENE_FRAG);
@@ -1265,173 +1537,138 @@ int main() {
 
     setupShadowFramebuffer();
     setupSkyVAO();
+    initRescueHud();
+    if (!g_shaderOkay || !arrakis_hud_detail::resources().program) {
+        glfwDestroyWindow(g_window); glfwTerminate(); return 1;
+    }
     initParticles();
-
-    // Initial deployment of a few spice tanks in the distance
-    g_tanks.push_back({ glm::vec3(-55.0f, 0.0f, 15.0f), 25.0f, 1.0f });
-    g_tanks.push_back({ glm::vec3(-35.0f, 0.0f, 18.0f), -15.0f, 1.0f });
-    g_tanks.push_back({ glm::vec3(-15.0f, 0.0f, 12.0f), 10.0f, 1.0f });
+    glGenBuffers(1, &g_particleInstanceVBO);
+    glBindVertexArray(g_meshQuad.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, g_particleInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, MAX_PARTICLES * sizeof(ParticleInstance), nullptr, GL_STREAM_DRAW);
+    for (int i = 0; i < 2; ++i) {
+        glEnableVertexAttribArray(3 + i);
+        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), reinterpret_cast<void*>(i * sizeof(glm::vec4)));
+        glVertexAttribDivisor(3 + i, 1);
+    }
+    glBindVertexArray(0);
+    g_particleInstances.reserve(MAX_PARTICLES);
+    resetMission(renderTest);
+    centerMouse(g_window);
+    if (breachTest || pursuitTest) {
+        float targetTime = breachTest ? g_mission.breachAt + 7 : 110.0f;
+        int steps = static_cast<int>(std::ceil(targetTime * 120));
+        for (int i = 0; i < steps; ++i) updateMission(targetTime / steps);
+        g_ornPos = harvesterPosition() + glm::vec3(35, 16, 40);
+        g_mission.altitude = 16;
+    }
 
     // Environment Lighting Constants
-    glm::vec3 sunDir = glm::normalize(glm::vec3(0.65f, 1.15f, 0.45f)); // Blinding high sun
-    glm::vec3 sunColor(1.0f, 0.94f, 0.82f);
-    glm::vec3 ambientColor(0.28f, 0.22f, 0.16f); // Warm desert ambient bounce
-    glm::vec3 fogColor(0.85f, 0.58f, 0.28f);     // Rich desert dust horizon
-    float     fogDensity = 0.0055f;
+    glm::vec3 sunDir = glm::normalize(glm::vec3(-0.35f, 0.12f, -1.0f));
+    glm::vec3 sunColor(1.15f, 1.04f, 0.85f);
+    glm::vec3 ambientColor(0.34f, 0.38f, 0.44f);
+    glm::vec3 fogColor(0.90f, 0.74f, 0.47f);
+    float     fogDensity = 0.0022f;
 
     float prevTime = (float)glfwGetTime();
 
     // Camera damping state
-    glm::vec3 camPosSmoothed = g_ornPos + glm::vec3(0, 10, 25);
+    glm::vec3 camPosSmoothed = g_ornPos + glm::vec3(0, 26, 42);
     glm::vec3 camTargetSmoothed = g_ornPos;
+    float simulationTime = g_mission.elapsed;
+    float fps = 60;
+    int frameCount = 0;
+    int cameraRevision = g_missionRevision;
+    bool renderFailed = false;
+    double smokeStarted = glfwGetTime();
 
     // =========================================================================
     // MAIN INTERACTIVE RENDER LOOP
     // =========================================================================
     while (!glfwWindowShouldClose(g_window)) {
+        if (glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
+            glfwWaitEvents();
+            prevTime = static_cast<float>(glfwGetTime());
+            continue;
+        }
         float curTime = (float)glfwGetTime();
         float dt = curTime - prevTime;
         prevTime = curTime;
         if (dt > 0.1f) dt = 0.1f; // Clamp delta time to avoid physics explosion
+        float realDt = dt;
 
-        // ---------------------------------------------------------------------
-        // 1. ORNITHOPTER FLIGHT SIMULATION & KINEMATICS
-        // ---------------------------------------------------------------------
-        g_isBoosting = g_keys[GLFW_KEY_LEFT_SHIFT];
-        bool isBraking  = g_keys[GLFW_KEY_SPACE];
-
-        float maxSpeed = g_isBoosting ? 38.0f : 20.0f;
-        float accelRate = g_isBoosting ? 24.0f : 12.0f;
-
-        if (g_keys[GLFW_KEY_W]) {
-            g_ornSpeed = std::min(g_ornSpeed + accelRate * dt, maxSpeed);
-        } else if (g_keys[GLFW_KEY_S]) {
-            g_ornSpeed = std::max(g_ornSpeed - accelRate * 1.5f * dt, -8.0f);
-        } else {
-            // Drag deceleration
-            if (g_ornSpeed > 0.0f) g_ornSpeed = std::max(0.0f, g_ornSpeed - 6.0f * dt);
-            if (g_ornSpeed < 0.0f) g_ornSpeed = std::min(0.0f, g_ornSpeed + 6.0f * dt);
-        }
-        if (isBraking) {
-            g_ornSpeed *= (1.0f - 3.5f * dt);
-        }
-
-        // Turning & Aerodynamic Banking Roll
-        float turnRate = 65.0f * dt;
-        float targetRoll = 0.0f;
-        if (g_keys[GLFW_KEY_A]) {
-            g_ornYaw += turnRate;
-            targetRoll = 32.0f; // Bank left
-        } else if (g_keys[GLFW_KEY_D]) {
-            g_ornYaw -= turnRate;
-            targetRoll = -32.0f; // Bank right
-        }
-        g_ornRoll = glm::mix(g_ornRoll, targetRoll, 7.0f * dt);
-
-        // Pitch & Altitude Controls
-        float targetPitch = 0.0f;
-        if (g_keys[GLFW_KEY_Q]) {
-            g_ornPos.y += 12.0f * dt;
-            targetPitch = -15.0f; // Nose up
-        }
-        if (g_keys[GLFW_KEY_E]) {
-            g_ornPos.y -= 12.0f * dt;
-            targetPitch = 15.0f;  // Nose down
-        }
-        g_ornPitch = glm::mix(g_ornPitch, targetPitch, 6.0f * dt);
-
-        // Advance position according to heading
-        float yawRad = glm::radians(g_ornYaw);
-        glm::vec3 fwdDir(-std::sin(yawRad), 0.0f, -std::cos(yawRad));
-        g_ornPos += fwdDir * (g_ornSpeed * dt);
-
-        // Terrain collision avoidance for ornithopter
-        float minFlightY = getDuneHeight(g_ornPos.x, g_ornPos.z) + 3.0f;
-        if (g_ornPos.y < minFlightY) g_ornPos.y = minFlightY;
-
-        // Wing Flutter Frequency (scales dynamically with flight speed and boost!)
-        float flapSpeed = g_isBoosting ? 38.0f : (16.0f + (g_ornSpeed / maxSpeed) * 16.0f);
-        g_wingPhase += flapSpeed * dt;
-
-        // ---------------------------------------------------------------------
-        // 2. SPICE HARVESTER MOVEMENT & DYNAMIC SPICE TANK SPAWNING
-        // ---------------------------------------------------------------------
-        g_harvX += g_harvSpeed * dt;
-        if (g_harvX > 160.0f) {
-            g_harvX = -160.0f;
-            g_lastTankDist = -160.0f;
-        }
-
-        // Spawn spice tanks as harvester advances across the dunes
-        if (g_harvX - g_lastTankDist > 24.0f) {
-            SpiceTankInstance st;
-            st.pos = glm::vec3(g_harvX - 8.0f, 0.0f, g_harvZ + (-2.0f + (rand() % 40) * 0.1f));
-            st.yaw = (float)(rand() % 360);
-            st.scale = 1.0f;
-            g_tanks.push_back(st);
-            g_lastTankDist = g_harvX;
-
-            if (g_tanks.size() > 24) {
-                g_tanks.erase(g_tanks.begin());
+        glfwPollEvents();
+        if (renderTest) {
+            dt = 1.0f / 60; g_mission.paused = false;
+            g_mouseHover = glm::vec2(0);
+            if (mouseTest) {
+                int width, height;
+                glfwGetWindowSize(g_window, &width, &height);
+                setMouseHover(width * (frameCount < 60 ? 0.85 : 0.15), height * 0.5, width, height);
+                g_keys[GLFW_KEY_W] = true;
+                g_camMode = (frameCount / 40) % 3;
             }
         }
-
-        // ---------------------------------------------------------------------
-        // 3. WIND & PARTICLES UPDATE
-        // ---------------------------------------------------------------------
-        float harvGroundY = getDuneHeight(g_harvX, g_harvZ);
-        glm::vec3 harvWorldPos(g_harvX, harvGroundY, g_harvZ);
-        updateParticles(dt, g_ornPos, harvWorldPos);
+        fps = glm::mix(fps, 1.0f / std::max(realDt, 0.0001f), 0.03f);
+        // Bounded substeps keep winching and flight stable at low frame rates.
+        if (!g_mission.paused) {
+            int steps = std::max(1, static_cast<int>(std::ceil(dt / (1.0f / 120))));
+            for (int i = 0; i < steps; ++i) updateMission(dt / steps);
+            // Let the swallowing/retreat animation finish behind the results UI.
+            if (g_mission.phase == MissionPhase::Debrief) g_mission.elapsed += dt;
+            simulationTime += dt;
+            if (g_mission.phase == MissionPhase::Title) g_wingPhase += 18 * dt;
+            updateParticles(dt, g_ornPos, harvesterPosition());
+        }
+        curTime = simulationTime;
 
         // ---------------------------------------------------------------------
         // 4. CAMERA SYSTEM (CINEMATIC CHASE / COCKPIT / OVERHEAD)
         // ---------------------------------------------------------------------
-        if (g_keys[GLFW_KEY_LEFT])  g_camOrbitYaw -= 55.0f * dt;
-        if (g_keys[GLFW_KEY_RIGHT]) g_camOrbitYaw += 55.0f * dt;
-        if (g_keys[GLFW_KEY_UP])    g_camOrbitPitch = std::min(g_camOrbitPitch + 40.0f * dt, 50.0f);
-        if (g_keys[GLFW_KEY_DOWN])  g_camOrbitPitch = std::max(g_camOrbitPitch - 40.0f * dt, -20.0f);
+        if (cameraRevision != g_missionRevision) {
+            cameraRevision = g_missionRevision;
+            camPosSmoothed = g_ornPos + glm::vec3(0, 14, 38);
+            camTargetSmoothed = g_ornPos;
+        }
+        if (!g_mission.paused) {
+            if (g_keys[GLFW_KEY_UP])   g_camOrbitPitch = std::min(g_camOrbitPitch + 40.0f * dt, 45.0f);
+            if (g_keys[GLFW_KEY_DOWN]) g_camOrbitPitch = std::max(g_camOrbitPitch - 40.0f * dt, -10.0f);
+        }
 
         glm::vec3 camTarget = g_ornPos;
-        glm::vec3 camDesiredPos;
-
-        if (g_camMode == 0) {
-            // Cinematic Third-Person Chase Camera: floating above & behind ornithopter
-            float camDist = 24.0f;
-            float totalYaw = g_ornYaw + 180.0f + g_camOrbitYaw;
-            float totalPitch = 24.0f + g_camOrbitPitch;
-            float cyr = glm::radians(totalYaw);
-            float cpr = glm::radians(totalPitch);
-
-            camDesiredPos = g_ornPos + glm::vec3(
-                camDist * std::cos(cpr) * std::sin(cyr),
-                camDist * std::sin(cpr),
-                camDist * std::cos(cpr) * std::cos(cyr)
-            );
-        } else if (g_camMode == 1) {
-            // Cockpit / Close Chase View
-            float camDist = 7.5f;
-            float totalYaw = g_ornYaw + 180.0f + g_camOrbitYaw;
-            float totalPitch = 12.0f + g_camOrbitPitch;
-            float cyr = glm::radians(totalYaw);
-            float cpr = glm::radians(totalPitch);
-
-            camDesiredPos = g_ornPos + glm::vec3(
-                camDist * std::cos(cpr) * std::sin(cyr),
-                2.2f + camDist * std::sin(cpr),
-                camDist * std::cos(cpr) * std::cos(cyr)
-            );
-        } else {
-            // High Overhead Tactical View (Surveying desert & harvester below)
-            camDesiredPos = g_ornPos + glm::vec3(0.0f, 65.0f, 15.0f);
+        glm::vec3 camOffset = flightCameraOffset(g_camMode);
+        glm::vec3 camDesiredPos = g_ornPos + camOffset;
+        if (breachTest) {
+            camTarget = harvesterPosition() + glm::vec3(0, 14, 0);
+            camDesiredPos = harvesterPosition() + glm::vec3(65, 48, 80);
+        } else if (pursuitTest) {
+            camTarget = (harvesterPosition() + wormPosition()) * 0.5f + glm::vec3(0, 6, 0);
+            camDesiredPos = camTarget + glm::vec3(65, 30, 155);
         }
 
         // Camera terrain collision safety
         float camGroundY = getDuneHeight(camDesiredPos.x, camDesiredPos.z) + 1.5f;
         if (camDesiredPos.y < camGroundY) camDesiredPos.y = camGroundY;
 
-        // Smooth spring damping
-        camPosSmoothed = glm::mix(camPosSmoothed, camDesiredPos, 9.0f * dt);
-        camTargetSmoothed = glm::mix(camTargetSmoothed, camTarget, 12.0f * dt);
+        // Smooth translation/elevation, but share the aircraft's exact heading.
+        // Smoothing world-space camera X/Z independently would expose its side.
+        camPosSmoothed.y = glm::mix(camPosSmoothed.y, camDesiredPos.y, 1.0f - std::exp(-9.0f * dt));
+        camTargetSmoothed = glm::mix(camTargetSmoothed, camTarget, 1.0f - std::exp(-12.0f * dt));
+        camPosSmoothed.x = camTargetSmoothed.x + camOffset.x;
+        camPosSmoothed.z = camTargetSmoothed.z + camOffset.z;
+        if (breachTest || pursuitTest) {
+            camPosSmoothed.x = camDesiredPos.x;
+            camPosSmoothed.z = camDesiredPos.z;
+        }
+        camPosSmoothed.y = std::max(camPosSmoothed.y, getDuneHeight(camPosSmoothed.x, camPosSmoothed.z) + 2);
+        if (mouseTest) {
+            glm::vec3 viewForward = camTargetSmoothed - camPosSmoothed;
+            viewForward.y = 0;
+            if (glm::dot(glm::normalize(viewForward), flightForward()) < 0.9999f) {
+                std::cerr << "Camera heading diverged from aircraft\n";
+                renderFailed = true; glfwSetWindowShouldClose(g_window, true);
+            }
+        }
 
         glm::mat4 view = glm::lookAt(camPosSmoothed, camTargetSmoothed, glm::vec3(0, 1, 0));
         float aspect = (float)g_scrW / (float)g_scrH;
@@ -1456,6 +1693,10 @@ int main() {
 
         glUseProgram(g_progShadow);
         glUniformMatrix4fv(glGetUniformLocation(g_progShadow, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+        glm::vec3 wormCenter = wormPosition();
+        float collapse = glm::smoothstep(7.0f, 14.0f, wormAttackTime());
+        glUniform3fv(glGetUniformLocation(g_progShadow, "wormCenter"), 1, glm::value_ptr(wormCenter));
+        glUniform1f(glGetUniformLocation(g_progShadow, "collapse"), collapse);
 
         // Slope-scale bias via polygon offset to eliminate shadow acne
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -1479,6 +1720,8 @@ int main() {
         glUseProgram(g_progSky);
         glUniform3fv(glGetUniformLocation(g_progSky, "lightDir"), 1, glm::value_ptr(sunDir));
         glUniform3fv(glGetUniformLocation(g_progSky, "sunColor"), 1, glm::value_ptr(sunColor));
+        glm::mat4 invViewProj = glm::inverse(proj * view);
+        glUniformMatrix4fv(glGetUniformLocation(g_progSky, "invViewProj"), 1, GL_FALSE, glm::value_ptr(invViewProj));
 
         glBindVertexArray(g_skyVAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -1497,6 +1740,8 @@ int main() {
         glUniform3fv(glGetUniformLocation(g_progScene, "viewPos"), 1, glm::value_ptr(camPosSmoothed));
         glUniform3fv(glGetUniformLocation(g_progScene, "fogColor"), 1, glm::value_ptr(fogColor));
         glUniform1f (glGetUniformLocation(g_progScene, "fogDensity"), fogDensity);
+        glUniform3fv(glGetUniformLocation(g_progScene, "wormCenter"), 1, glm::value_ptr(wormCenter));
+        glUniform1f(glGetUniformLocation(g_progScene, "collapse"), collapse);
 
         // Bind shadow depth texture to texture slot 0
         glActiveTexture(GL_TEXTURE0);
@@ -1521,26 +1766,74 @@ int main() {
         glUniform3fv(glGetUniformLocation(g_progParticle, "camRight"), 1, glm::value_ptr(camRight));
         glUniform3fv(glGetUniformLocation(g_progParticle, "camUp"), 1, glm::value_ptr(camUp));
 
-        glm::vec3 sandCol = COL_DUNE_SAND * 1.15f;
-        glUniform3fv(glGetUniformLocation(g_progParticle, "particleColor"), 1, glm::value_ptr(sandCol));
-
-        glBindVertexArray(g_meshQuad.VAO);
+        g_particleInstances.clear();
         for (const auto& p : g_particles) {
-            glUniform3fv(glGetUniformLocation(g_progParticle, "particlePos"), 1, glm::value_ptr(p.pos));
-            glUniform1f (glGetUniformLocation(g_progParticle, "particleSize"), p.size);
-            glUniform1f (glGetUniformLocation(g_progParticle, "particleAlpha"), p.alpha);
-            glDrawElements(GL_TRIANGLES, g_meshQuad.indexCount, GL_UNSIGNED_INT, 0);
+            float fade = glm::clamp(p.life / 0.5f, 0.0f, 1.0f) * glm::clamp((p.maxLife - p.life) / 0.3f, 0.0f, 1.0f);
+            g_particleInstances.push_back({glm::vec4(p.pos, p.size), glm::vec4(COL_DUNE_SAND, p.alpha * fade)});
         }
+        std::sort(g_particleInstances.begin(), g_particleInstances.end(), [&](const ParticleInstance& a, const ParticleInstance& b) {
+            glm::vec3 da = glm::vec3(a.posSize) - camPosSmoothed, db = glm::vec3(b.posSize) - camPosSmoothed;
+            return glm::dot(da, da) > glm::dot(db, db);
+        });
+        glBindBuffer(GL_ARRAY_BUFFER, g_particleInstanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, g_particleInstances.size() * sizeof(ParticleInstance), g_particleInstances.data(), GL_STREAM_DRAW);
+        glBindVertexArray(g_meshQuad.VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, g_meshQuad.indexCount, GL_UNSIGNED_INT, nullptr, static_cast<GLsizei>(g_particleInstances.size()));
 
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
         glEnable(GL_CULL_FACE);
 
+        RescueHudState hud;
+        hud.width = g_scrW; hud.height = g_scrH;
+        hud.rescued = g_mission.rescued; hud.aboard = g_mission.aboard;
+        hud.lost = g_mission.lost; hud.best = g_mission.best; hud.wave = g_mission.wave;
+        hud.inside = 0;
+        for (const auto& c : g_mission.crew) {
+            if (c.state == CrewState::Inside) ++hud.inside;
+            if (c.state == CrewState::Running || c.state == CrewState::Waiting) {
+                ++hud.waiting;
+                hud.crewMarkers.push_back({c.pos.x, c.pos.z});
+            }
+        }
+        hud.missionDuration = g_mission.breachAt;
+        hud.pursuit = glm::clamp(g_mission.elapsed / g_mission.breachAt, 0.0f, 1.0f);
+        hud.wormDistance = wormGap();
+        hud.extractionRemaining = std::max(0.0f, 60 - wormAttackTime());
+        hud.releasedGroups = 0;
+        for (const auto& group : g_mission.groups) if (group.released) ++hud.releasedGroups;
+        hud.remaining = std::max(0.0f, g_mission.breachAt - g_mission.elapsed);
+        hud.altitude = g_ornPos.y - getDuneHeight(g_ornPos.x, g_ornPos.z);
+        hud.speed = g_ornSpeed; hud.boost = g_mission.boost;
+        hud.pickupProgress = g_mission.pickup; hud.unloadProgress = g_mission.unload;
+        hud.fps = fps; hud.prompt = g_mission.prompt;
+        hud.heading = g_ornYaw;
+        hud.title = g_mission.phase == MissionPhase::Title;
+        hud.ended = g_mission.phase == MissionPhase::Debrief; hud.paused = g_mission.paused;
+        hud.player = {g_ornPos.x, g_ornPos.z}; hud.base = {g_mission.base.x, g_mission.base.z};
+        hud.harvester = {g_harvX, g_harvZ}; hud.worm = {wormCenter.x, wormCenter.z};
+        glm::vec3 pickup = nearestCrewPosition();
+        hud.pickup = {pickup.x, pickup.z};
+        hud.attackTime = wormAttackTime();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        drawRescueHud(hud);
+        glPolygonMode(GL_FRONT_AND_BACK, g_wireframe ? GL_LINE : GL_FILL);
+
         // ---------------------------------------------------------------------
         // 7. BUFFER SWAP & EVENT POLLING
         // ---------------------------------------------------------------------
+        if (renderTest) {
+            GLenum error = glGetError();
+            if (error != GL_NO_ERROR) {
+                std::cerr << "OpenGL error in frame " << frameCount << ": " << error << "\n";
+                renderFailed = true; glfwSetWindowShouldClose(g_window, true);
+            }
+            if (frameCount == 119 && argc > 2 && !captureScreenshot(argv[2])) {
+                std::cerr << "Screenshot write failed\n"; renderFailed = true;
+            }
+        }
         glfwSwapBuffers(g_window);
-        glfwPollEvents();
+        if (renderTest && ++frameCount >= 120) glfwSetWindowShouldClose(g_window, true);
     }
 
     // Cleanup resources
@@ -1550,8 +1843,20 @@ int main() {
     glDeleteProgram(g_progSky);
     glDeleteFramebuffers(1, &g_shadowFBO);
     glDeleteTextures(1, &g_shadowTex);
+    glDeleteBuffers(1, &g_particleInstanceVBO);
+    glDeleteBuffers(1, &g_skyVBO);
+    glDeleteVertexArrays(1, &g_skyVAO);
+    cleanupSandwormMeshes();
+    cleanupRescueHud();
+    for (Mesh* m : {&g_meshCube, &g_meshCylinder, &g_meshSphere, &g_meshWing, &g_meshTerrain, &g_meshQuad, &g_meshRing, &g_meshRock}) {
+        glDeleteVertexArrays(1, &m->VAO);
+        glDeleteBuffers(1, &m->VBO);
+        glDeleteBuffers(1, &m->EBO);
+    }
 
     glfwDestroyWindow(g_window);
+    if (renderTest) std::cout << "Render smoke test: " << (renderFailed ? "FAILED" : "PASS")
+        << " / " << frameCount << " frames / " << (glfwGetTime() - smokeStarted) << " seconds\n";
     glfwTerminate();
-    return 0;
+    return renderFailed ? 1 : 0;
 }

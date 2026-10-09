@@ -1,4 +1,85 @@
-# 🪱 ARRAKIS — Cinematic Dynamic Dune Simulation
+# ARRAKIS / Harvester Down
+
+## Play the Rescue Game
+
+A sandworm is pursuing a moving spice harvester across a winding dune escape
+route. Every seven seconds the harvester releases another group of one to four
+workers, starting six seconds into the mission. They run clear, then wait at that
+fixed drop-off location, marked by an amber beacon. Rescue as many of the 36 crew
+as possible, eight at a time, and deliver them to the cyan landing pad. Only
+delivered survivors count toward your score.
+
+The first mission gives you 210 seconds (3:30) before the worm catches the
+harvester. Later missions shorten this by ten seconds, down to a 150-second
+minimum. The surfaced worm and its sand wake move closer throughout the pursuit;
+the HUD shows its closing distance and the radar tracks every waiting group.
+
+- `Enter`: start or advance to the next mission.
+- Mouse hover: steer without clicking. Hover right or left of center to turn the
+  ornithopter and camera together. The center brackets mark a neutral dead zone;
+  move the cursor back inside to stop turning. Farther from center turns faster.
+- `W / S`: fly forward / backward along the current heading.
+- `A / D`: strafe left / right without changing which way the aircraft faces.
+- `Q / E`: raise / lower terrain-following flight altitude.
+- `Space`: brake, descend to rescue altitude, and winch nearby workers. Hold it
+  over the cyan pad to unload. Pickup requires low, steady flight.
+- `Left Shift`: rechargeable boost; release it to recharge.
+- `C`: cycle wide, close, and tactical cameras.
+- Hover above / below center to change camera elevation. Left / right arrows
+  provide keyboard steering; up / down arrows adjust camera elevation.
+- `P`: pause / resume. Losing window focus also pauses the mission.
+- `R`: retry the current mission. `F11`: fullscreen. `Esc`: exit.
+
+All camera modes rotate with the aircraft, keeping its nose forward on screen.
+The cursor stays free; moving it out of the window stops mouse steering. Starting,
+retrying, resizing, switching fullscreen, or resuming centers the cursor to avoid
+an accidental turn. Losing focus pauses flight and clears held inputs.
+
+The worm rises, bends its circular tooth-lined mouth toward the harvester,
+swallows it and nearby stranded crew, then disappears into a collapsing sand
+basin. Workers farther away remain available for rescue during a 60-second final
+extraction window. Approaching the moving worm too closely is dangerous for both
+the aircraft and crew left behind. Its procedural shape follows `sandworm.jpg`;
+the image is a visual reference, not a flat sprite or a texture pasted onto a
+cylinder. The cloud-free sky blends golden horizon haze into blue, with a visible
+warm sun lighting the dunes.
+The best delivered score is retained for the current application session.
+
+## Build and Run
+
+```powershell
+cmake -S . -B build/rescue -G "Visual Studio 17 2022" -A x64
+cmake --build build/rescue --config Release
+.\build\rescue\Release\Arrakis.exe
+```
+
+Requires C++17, GLFW, GLAD, GLM, and OpenGL 3.3. The existing `E:/glfw_nec` and
+`E:/glm` installs are discovery hints. Override `GLAD_INCLUDE_DIR`,
+`GLFW_INCLUDE_DIR`, `GLM_INCLUDE_DIR`, and `GLFW_LIBRARY` through CMake for other
+installations. The Visual Studio project also includes the new game headers.
+
+```powershell
+ctest --test-dir build/rescue -C Release --output-on-failure
+.\build\rescue\Release\Arrakis.exe --smoke-test
+.\build\rescue\Release\Arrakis.exe --smoke-breach
+.\build\rescue\Release\Arrakis.exe --smoke-mouse
+.\build\rescue\Release\Arrakis.exe --smoke-pursuit
+```
+
+The first command runs deterministic headless rescue-logic tests. The smoke
+tests render 120 frames, check OpenGL errors, and exit; an optional second
+argument saves a BMP capture. They require an OpenGL-capable desktop.
+The mouse smoke test turns both directions while flying, cycles all three camera
+modes, and verifies the camera keeps the aircraft facing forward every frame.
+The pursuit smoke test renders the moving evacuation at mid-mission with both
+the fleeing harvester and approaching worm in view.
+
+## Original Renderer Reference
+
+The following material describes the earlier free-flight renderer. The game
+controls, build instructions, and behavior above supersede the older sections.
+
+# Original Cinematic Dynamic Dune Simulation
 ### CSE 4102: Computer Graphics and Image Processing Laboratory Project
 
 ---
