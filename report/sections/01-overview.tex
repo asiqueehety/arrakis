@@ -1,0 +1,54 @@
+\section{Description}
+\textbf{Arrakis: Harvester Down} is an interactive, real-time desert rescue game implemented in C++17 with OpenGL 3.3. The player pilots an ornithopter over a procedurally generated desert, rescues workers escaping a moving spice harvester, and delivers them to a safe landing pad before a pursuing sandworm reaches the harvester. The setting is inspired by the desert world of \emph{Dune}; the meshes, rendering, animation and mission rules are implemented in the project rather than loaded from a game engine.
+
+The scene is not merely a static model viewer. It combines a controllable aircraft, autonomous vehicles and characters, an animated sandworm, dust particles, a changing rescue mission, camera control, on-screen instrumentation and event-driven audio. All visible geometry is generated in code. Surface detail is also procedural: no external 3D models or image textures are loaded. Runtime file assets are the sound effects.
+
+\subsection{Objectives}
+\begin{itemize}
+\item Construct recognizable objects from triangle meshes and reusable parametric shapes.
+\item Explain curved surfaces and complex motion with equations that correspond to the implementation.
+\item Provide responsive, game-like control of a dynamic object and its camera.
+\item Integrate autonomous motion, timed events and interaction into one dynamic scene.
+\item Apply lighting, shadows, procedural surface detail, atmospheric effects and transparent particles.
+\item Document the entire path from source code and assets to an interactive rendered frame and verifiable demonstration.
+\end{itemize}
+
+\subsection{Mission in Plain Language}
+At the start of a mission, 36 workers are inside the harvester. Small groups evacuate, run away from it and wait at amber rescue beacons. The aircraft can carry at most eight workers. The player must fly low and steadily, hold the winch/brake control near a group, and then unload at the cyan base. A worker is counted as \emph{secured} only after delivery; merely boarding the aircraft does not increase the final rescue score.
+
+The first pursuit lasts 210 seconds. Each later mission reduces this duration by 10 seconds, down to a minimum of 150 seconds. A worm attack ends the harvester phase, followed by a 60-second final extraction window. Remaining exposed workers can still be rescued during that window. At debrief, the project reports the outcome and allows retry or the next mission. The best score is retained during the running application, not saved permanently to a file.
+
+\subsection{Implemented Feature Summary}
+\begin{longtable}{L{0.25\linewidth}L{0.69\linewidth}}
+\toprule\textbf{Area}&\textbf{Implemented features}\\\midrule\endhead
+Objects & Dune terrain, ornithopter with articulated wings, multipart spice harvester, three spice tanks, rock formations, landing pad and lights, evacuation markers, worker characters, winch line, detailed sandworm and underground wake.\\
+Curved geometry & Ellipsoids, cylinders and discs, annular rings, a multi-frequency height field, an organic segmented worm body, a recessed mouth, concentric lips and curved teeth.\\
+Motion and interaction & Terrain-following aircraft with acceleration and damping, strafing and boost; autonomous harvester route; evacuation and running workers; winching and delivery; worm pursuit, rise, attack and retreat; wing and machinery animation.\\
+Dynamic scenes & Briefing, active rescue, pursuit escalation, evacuation, worm breach, harvester consumption, final extraction, pause, debrief, retry and increasing mission difficulty.\\
+Graphics & Indexed triangle meshes, transformations, GLSL lighting and procedural materials, directional shadow mapping with filtering, generated sky and sun, distance fog, GPU terrain collapse, instanced transparent dust, wireframe inspection.\\
+Interface & Bitmap-font HUD, world radar, crew and cargo counters, timers, altitude/speed/FPS, boost and danger bars, contextual messages, menu/pause/debrief overlays, three camera presets, fullscreen and focus handling.\\
+Audio & Eight runtime sound effects, looping vehicle/worm ambience, changing pitch and volume, event sounds, mute, pause silencing, and graceful failure when audio is unavailable.\\
+Engineering & CMake/Visual Studio builds, dependency discovery, audio copying, deterministic mission tests, graphical smoke tests with BMP capture, and a reproducible documentation tool.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Reading Guide and Scope}
+Sections 2--4 explain objects, motion and rendering with equations. Section 5 connects them into the complete application pipeline, including controls, audio, build and verification. Section 6 maps the assessment requirements to evidence and supplies the exact ten-slide structure and a 120-second demonstration plan.
+
+This report describes the \textbf{current source implementation}, not unimplemented proposal ideas. The screenshots are actual application frames captured from the current Release build. The presentation outline and video timeline are preparation instructions: this report does not claim that a slide deck or a two-minute recording has already been produced. Where a technical term or marking weight was not defined in the assignment, that uncertainty is stated rather than guessed.
+
+\subsection{Essential Graphics Terms}
+\begin{tabularx}{\linewidth}{L{0.22\linewidth}Y}
+\toprule\textbf{Term}&\textbf{Meaning in this report}\\\midrule
+Mesh & Vertices joined into triangles to approximate an object's surface.\\
+Normal & A direction perpendicular to the surface, used to calculate lighting.\\
+Shader & A small GPU program that transforms vertices or colours individual fragments.\\
+Fragment & A candidate contribution to a screen pixel produced while rasterizing a triangle.\\
+Procedural & Generated by code and mathematical rules instead of imported artwork.\\
+UV & Two surface coordinates often used for textures; present in the meshes even when the appearance uses world coordinates.\\
+Framebuffer & The rendering destination; either the window or an off-screen target such as the shadow map.\\
+Instancing & Drawing many copies of one mesh with different per-copy data in one draw call.\\
+\bottomrule
+\end{tabularx}
+\source{README.md; src/arrakis.cpp; src/arrakis_game.h; src/arrakis_worm.h; src/arrakis_hud.h; src/arrakis_audio.h}
+\clearpage

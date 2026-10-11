@@ -1,0 +1,88 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{Arial}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=0.88]
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{hyperref}
+% Avoid infinite-shrink glue during longtable page mark extraction.
+\AddToHook{cmd/LT@output/before}{\let\vss\vfil}
+\hypersetup{hidelinks,pdftitle={Arrakis: Harvester Down - Project Report},pdfauthor={Asique Ehetasamul Haque},pdfsubject={CSE 4102 Computer Graphics and Image Processing Laboratory}}
+\setcounter{tocdepth}{2}
+\definecolor{lightgray}{gray}{0.94}
+\definecolor{rulegray}{gray}{0.65}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.2}
+\setlist[itemize]{leftmargin=18pt,itemsep=3pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=20pt,itemsep=3pt,topsep=3pt}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{16pt}{7pt}
+\titlespacing*{\subsection}{0pt}{11pt}{4pt}
+\captionsetup{font=small,labelfont=bf}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Arrakis: Harvester Down}
+\fancyhead[R]{\small CSE 4102}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,frame=single,rulecolor=\color{rulegray},backgroundcolor=\color{lightgray},showstringspaces=false,aboveskip=8pt,belowskip=8pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\source}[1]{\par{\footnotesize\raggedright\textbf{Implementation reference:}\par\code{#1}\par}}
+\newcommand{\shot}[3]{\par\smallskip\noindent\begin{minipage}{\linewidth}\centering\includegraphics[width=0.9\linewidth]{figures/#1}\captionsetup{hypcap=false}\captionof{figure}{#2}\label{#3}\end{minipage}\par\smallskip}
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\centering
+\vspace*{10mm}
+{\large CSE - 4102\par}
+\vspace{3mm}
+{\normalsize Computer Graphics and Image Processing Laboratory\par}
+\vspace{10mm}
+{\fontsize{40}{46}\selectfont\bfseries Project Report\par}
+\vspace{16mm}
+{\fontsize{28}{34}\selectfont\bfseries Arrakis\par}
+\vspace{3mm}
+{\fontsize{22}{28}\selectfont\bfseries Harvester Down\par}
+\vspace{6mm}
+{\large An Interactive Procedural Desert Rescue Game\par}
+\vfill
+{\small\bfseries Assigned to:\par}
+\vspace{5mm}
+{\large Asique Ehetasamul Haque\par}
+\vspace{2mm}
+{\large Roll: \textbf{2107096}\par}
+{\large Year: 4\textsuperscript{th}\par}
+{\large Semester: 1\textsuperscript{st}\par}
+{\large Group: B2\par}
+\vspace{4mm}
+{\normalsize Department of Computer Science and Engineering,\par}
+{\normalsize Khulna University of Engineering and Technology\par}
+\vspace*{9mm}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\input{sections/01-overview}
+\input{sections/02-objects}
+\input{sections/03-motion}
+\input{sections/04-rendering}
+\input{sections/05-pipeline}
+\input{sections/06-assessment}
+\end{document}

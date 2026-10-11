@@ -1,0 +1,171 @@
+\clearpage
+\section{Motion, Control and Dynamic Scenes}
+\subsection{Time and Simulation Design}
+Let $\Delta t$ be the time step in seconds. Simulation positions use game-world units; the HUD labels these as metres for player readability. Angles in trigonometric functions are radians unless degrees are stated explicitly. The application clamps a long frame interval to 0.1 seconds and divides mission updates into steps no larger than approximately $1/120$ second. This limits instability and makes scheduled interactions less dependent on rendering speed.
+
+Many smooth responses use the exponential interpolation factor
+\begin{equation}
+\alpha_k=1-e^{-k\Delta t},\qquad x_{\mathrm{new}}=(1-\alpha_k)x+\alpha_k x_{\mathrm{target}}.
+\end{equation}
+Here $k$ is a response rate: a larger value reaches the target faster. Unlike a fixed per-frame interpolation amount, this factor adjusts naturally to frame duration. It does not make every part of the entire simulation perfectly frame-rate independent; positions are still advanced in discrete steps.
+
+Mission elapsed time, wing phase and the presentation clock are separate values. Pausing stops mission/presentation/particle advancement, but camera smoothing can still settle into position. The main application also advances the elapsed clock in debrief so the worm's final animation can finish, even though the standalone mission update no longer advances gameplay there.
+\source{src/arrakis.cpp:1855--1946; src/arrakis_game.h:168--214}
+
+\subsection{Player-Controlled Aircraft}
+\subsubsection{Heading, mouse steering and banking}
+For aircraft yaw $\theta$, the horizontal forward and right vectors are
+\begin{equation}
+\mathbf f=(-\sin\theta,0,-\cos\theta),\qquad
+\mathbf r=\mathbf f\times(0,1,0).
+\end{equation}
+Thus yaw zero faces negative $Z$. Forward/reverse and strafe controls are evaluated in this local basis; strafing does not force the nose to face the movement direction.
+
+Mouse position is normalized using the logical window dimensions:
+\begin{equation}
+u_x=2x/w-1,\quad u_y=2y/h-1,\qquad
+D(u)=\operatorname{sign}(u)\max\left(0,\frac{|u|-0.12}{0.88}\right).
+\end{equation}
+The central dead zone occupies $\pm6\%$ of the full width/height around the screen centre. Moving the mouse outside it steers continuously without requiring a click. Invalid or outside-window input clears the steering values.
+
+Horizontal mouse input and left/right arrows combine into
+\begin{equation}
+s=\operatorname{clamp}(D(u_x)+I_{\mathrm{Right}}-I_{\mathrm{Left}},-1,1),\qquad q=-80s,
+\end{equation}
+where $q$ is the target yaw rate in degrees per second. With previous rate $\omega$ and $d=e^{-8\Delta t}$, the code analytically integrates the smoothed turn:
+\begin{align}
+\theta_{\mathrm{new}}&=\operatorname{remainder}\left(\theta+q\Delta t+\frac{(\omega-q)(1-d)}{8},360\right),\\
+\omega_{\mathrm{new}}&=q+(\omega-q)d.
+\end{align}
+This yields responsive but non-abrupt rotation. Returning the cursor to the centre damps turn rate; it does not snap heading back. Aircraft roll follows $0.28\omega$ with response rate 6, producing visible banking.
+\source{src/arrakis_game.h:91--105,175--184}
+
+\subsubsection{Translation, braking and boost}
+The input vector is
+\begin{equation}
+\mathbf i=\mathbf r(I_D-I_A)+\mathbf f(I_W-I_S).
+\end{equation}
+Any nonzero vector is normalized, preventing diagonal motion from being faster. Target speed is 28 normally or 48 when boosting. Space reduces commanded speed to 10\% and increases damping, allowing low-speed rescue hovering:
+\begin{equation}
+\mathbf v_d=V\widehat{\mathbf i},\qquad
+\mathbf v_{\mathrm{new}}=\operatorname{mix}(\mathbf v,\mathbf v_d,1-e^{-k\Delta t}),\qquad
+\mathbf p_{\mathrm{new}}=\mathbf p+\mathbf v_{\mathrm{new}}\Delta t,
+\end{equation}
+where $k=5.5$ normally and $k=12$ with Space. Horizontal position is limited to $[-160,160]$ in both $X$ and $Z$.
+
+Boost charge starts at 1, drains by $0.22\Delta t$ while boosting and recharges by $0.14\Delta t$ otherwise, clamped to $[0,1]$. Boost requires movement, Left Shift and no Space. At charge $\le0.04$, a lock prevents immediate automatic reactivation; the player must release Shift to clear it. Boost also changes wing speed, engine-flame length and sound.
+\source{src/arrakis_game.h:183--198}
+
+\subsubsection{Terrain following and obstacle clearance}
+Q/E changes requested altitude by $15(I_Q-I_E)\Delta t$, clamped to 4--55. Space smoothly pulls it toward 6. The target aircraft height is terrain height plus the requested clearance, modified near obstacles. At a rock distance $d$,
+\begin{equation}
+c\leftarrow\max\left(c,13[1-\operatorname{smoothstep}(8,17,d)]\right).
+\end{equation}
+Near the harvester, the clearance is raised to at least 12 while its attack time is below 11. Vertical position follows the target at response rate 8 and is never permitted below terrain height plus 3. This is an arcade clearance rule, not exact mesh collision or aerodynamic physics. Aircraft pitch follows $-0.3\|\mathbf v_{XZ}\|$ at response rate 6 to visually indicate forward motion.
+
+The aircraft root matrix is $T(\mathbf p)R_y(\theta)R_x(\mathrm{pitch})R_z(\mathrm{roll})$. Each wing is transformed relative to this root; translation and articulation therefore remain attached during all player movement.
+\source{src/arrakis_game.h:199--213; src/arrakis.cpp:1529--1533}
+
+\subsection{Wing and Machinery Animation}
+The aircraft has eight wings, four on each side. Wing phase advances at 23 radians/second normally, 36 when boosting and 18 on the title screen. The primary flap signal has amplitude $34^\circ$:
+\begin{equation}
+\beta_1=34\sin\phi,\qquad \beta_2=34\sin(\phi+0.75\pi).
+\end{equation}
+The second signal is offset by three quarters of $\pi$, not exactly opposite phase. A twist term $8\cos\phi\cdot\mathrm{side}$ adds pitching variation. Combined hinge rotation and local scaling create a mechanical insect-like motion. Engine flame length changes from 0.6 to 1.4 during boost and its emission increases.
+
+Harvester sprockets, track pads and drum rotation depend on accumulated horizontal travel $\ell$, not simply wall-clock time. Representative phases are $80\ell$ degrees for sprocket markers, $2\pi j/10+0.7\ell$ for track pads and $70\ell$ degrees for the intake drum. Machinery therefore stops when the harvester stops rather than appearing to run independently of its motion.
+\source{src/arrakis.cpp:1066--1198,1255--1274; src/arrakis_game.h:213}
+
+\subsection{Harvester Route and Terrain Alignment}
+At route time $t$, the harvester follows
+\begin{align}
+x(t)&=-40+0.62t+15\sin(0.045t),\\
+z(t)&=-55+22\sin(0.032t)+9\sin(0.071t),\\
+y(t)&=H(x(t),z(t)).
+\end{align}
+Its forward direction follows the tangent, using
+\begin{align}
+x'(t)&=0.62+0.675\cos(0.045t),\\
+z'(t)&=0.704\cos(0.032t)+0.639\cos(0.071t),\\
+\psi&=\operatorname{atan2}(-x',-z').
+\end{align}
+The heading is converted to degrees for the stored yaw. Terrain samples along its forward/right axes provide pitch and roll. The route time is clamped to the breach deadline $B$, so its position and yaw freeze when the attack begins.
+
+For attack time $a=t_{\mathrm{mission}}-B$, the vehicle sinks by
+\begin{equation}
+h_{\mathrm{sink}}=20\operatorname{smoothstep}(6,12,a).
+\end{equation}
+An added $X$ tilt of $0.8\operatorname{smoothstep}(6,12,a)$ radians accompanies the descent. It is no longer drawn at $a\ge12$, conveying that it has been consumed. The three spice tanks are also hidden after this interval; they do not move or deploy independently.
+\source{src/arrakis_game.h:44--67; src/arrakis.cpp:1535--1566}
+
+\subsection{Worker Evacuation and Rescue States}
+Group $j$ releases at $t_j=6+7j$ seconds. The harvester position and heading used for that group's exit are sampled at its scheduled release time, not the first frame after release. This avoids destination drift between frame rates.
+
+With harvester position $\mathbf o$, forward $\mathbf f$ and right $\mathbf r$, each group uses
+\begin{align}
+\mathbf e&=\mathbf o+6.1\mathbf r-1.2\mathbf f,\\
+\mathbf c&=\mathbf e+14\mathbf r,\\
+\mathbf d_s&=\mathbf c+1.7\left(s-\frac{n-1}{2}\right)\mathbf f+1.3(s\bmod2)\mathbf r.
+\end{align}
+Here $n$ is group size and $s$ is the member's slot. These offsets spread people around a fixed group marker. The final group releases at 104 seconds. Workers run horizontally toward their destination at 3.8 units/second, sample terrain height at each update, and change from \code{Running} to \code{Waiting} on arrival.
+
+Running limb stride is $24\sin(11t_{\mathrm{anim}}+i)$ degrees; waiting stride is $4\sin(2t_{\mathrm{anim}}+i)$, giving idle movement. Amber rings/poles remain only while a released group still has visible running/waiting members. Individual inside, aboard, safe and lost workers are tracked logically but not drawn in the world.
+\source{src/arrakis_game.h:141--154,215--250; src/arrakis.cpp:1440--1508}
+
+\subsubsection{Pickup and delivery rules}
+Pickup requires a running/waiting worker at horizontal distance \emph{less than} 12, an available seat, Space held, actual terrain clearance $\le11$ and horizontal speed $<6$. Staying eligible for about 0.42 seconds completes one pickup; changing target or failing the conditions resets progress. During pickup, smoothstep progress lifts the target visually and a cyan line connects the aircraft and worker.
+
+Delivery requires base distance $<14$, passengers aboard, Space held and the same low/steady conditions. A continuous 1.2-second dwell unloads the whole cabin, marks those people \code{Safe} and updates secured/best counts. Leaving the conditions resets the dwell. An eight-seat cabin requires multiple round trips for all 36 people.
+
+The state progression is
+\begin{center}
+\code{Inside} $\longrightarrow$ \code{Running} $\longrightarrow$ \code{Waiting}
+$\longrightarrow$ \code{Aboard} $\longrightarrow$ \code{Safe}.
+\end{center}
+Unresolved crew can instead become \code{Lost} through hazards or timeout. A running person may be picked up before reaching the waiting state.
+\source{src/arrakis_game.h:261--305; src/arrakis.cpp:1490--1508}
+
+\subsection{Worm Pursuit, Attack and Scene Escalation}
+The worm-to-harvester gap is
+\begin{equation}
+g(t)=220-202\operatorname{clamp}(t/B,0,1).
+\end{equation}
+The worm is positioned at the current harvester location minus $(g,0,0)$, with its own terrain-sampled height and fixed yaw $90^\circ$. It therefore approaches from world west, reducing its gap from 220 to 18, rather than pathfinding along the harvester's actual trail. The visual worm pose adds the detailed rise/attack/retreat motion described in Section 2.
+
+The mission uses the following separate hazard rules; they do not depend on triangle-level mouth collision.
+\begin{longtable}{L{0.25\linewidth}L{0.27\linewidth}L{0.40\linewidth}}
+\toprule\textbf{Stage}&\textbf{Crew danger}&\textbf{Aircraft danger}\\\midrule\endhead
+Approach: $a<0$, elapsed $>8$ & Running/waiting crew within 16 horizontal units of worm centre. & Distance $<18$ and aircraft below worm terrain height +22.\\
+Breach & For $3<a<12$, outside crew within 32 horizontal units. & For $3<a<15$, distance $<24$ and aircraft below worm terrain height +40.\\
+Swallow & For $12\le a<18$, outside crew within 44 units; all crew still inside the harvester are lost at $a\ge12$. & Uses the breach condition until $a=15$; there is no additional swallowing envelope.\\
+Final extraction & Outside crew are not threatened by the worm from $a\ge18$; rescue continues until $a=60$. & Safe flight and rescue remain available unless the aircraft was already lost.\\
+\bottomrule
+\end{longtable}
+An aircraft collision marks every crew member not already safe/lost as lost, not only the cabin occupants, and ends the mission. Previously secured workers remain saved. At the 60-second extraction timeout, unresolved and aboard workers are lost. A mission can end earlier when all crew have been accounted for and none remain aboard.
+
+These rules make the scene dynamic at several levels: the player changes position and rescue state, independent workers and machinery move, a threat approaches, the harvester is removed, environmental dust changes source, the timer switches purpose, and debrief becomes available. This is the distinction between \emph{dynamic objects} and a \emph{dynamic scene}.
+\source{src/arrakis_game.h:68--78,251--258,298--305}
+
+\subsection{Camera Movement}
+All three camera modes are third-person, heading-following views. The close preset is called ``Cockpit/Close'' in code but is not a cockpit interior. For vertical mouse signal $D(u_y)$ and arrow-controlled offset $p_o$,
+\begin{equation}
+p=\operatorname{clamp}(12-22D(u_y)+p_o,6,65)\text{ degrees},\qquad \mathbf b=-\mathbf f.
+\end{equation}
+The offsets from the following target are
+\begin{align}
+\mathbf o_{\mathrm{wide}}&=40\cos p\,\mathbf b+(0,40\sin p,0),\\
+\mathbf o_{\mathrm{close}}&=20\cos p\,\mathbf b+(0,20\sin p+2.2,0),\\
+\mathbf o_{\mathrm{tactical}}&=26\mathbf b+(0,100,0).
+\end{align}
+The target follows the aircraft at rate 12; eye height smooths at rate 9. Horizontal camera placement uses the heading offset directly, keeping screen direction aligned with aircraft heading. The camera is kept above the terrain, and world-up is $(0,1,0)$ so banking does not roll the view. Arrow elevation changes at $40^\circ$/second and its offset is bounded to $[-10^\circ,45^\circ]$.
+
+The view matrix is a look-at matrix from camera eye to target. The perspective projection uses vertical field of view $58^\circ$, current framebuffer aspect ratio, near plane 0.4 and far plane 1200. Camera reset/resume/resize/fullscreen handling centres the cursor to prevent an unintended sharp turn.
+\source{src/arrakis_game.h:107--118; src/arrakis.cpp:1903--1961}
+
+\subsection{Particles as Dynamic Environmental Objects}
+The desert has 2,400 dust particles. Wind direction is the normalized vector $(-0.92,-0.04,0.38)$ and base wind speed is 18. A gust multiplier $1+0.35\sin(1.8t_{\mathrm{wall}})$ changes intensity. Particle lifetime decreases each update and position is advected by its current velocity; particles that expire or leave the active region respawn.
+
+Respawn sources depend on particle index and mission stage: harvester dust, worm dust, aircraft downwash when Space is held, or ambient upwind sand. Respawn lifetimes lie between 2 and 3.98 seconds. A ground contact places a particle at terrain+0.2 and gives upward velocity $|v_y|\cdot0.5+0.8$. This produces drifting clouds and local activity without a fluid simulator.
+
+Initial and update random generators use fixed seeds 1337 and 1984. However, gusts use GLFW wall time, and particle updates run once per rendered frame, so visual dust is not guaranteed identical across all runs. It does not push the aircraft or deform the terrain.
+\source{src/arrakis.cpp:153--255}
