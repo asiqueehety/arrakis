@@ -1,0 +1,165 @@
+\clearpage
+\section{Rendering, Appearance and Additional Features}
+\subsection{Forward Rendering Pipeline}
+The scene uses a forward renderer: each visible object's fragment shader calculates its material/lighting directly, rather than filling a deferred G-buffer. Per frame, the graphics stages are
+\begin{center}
+\textbf{Shadow depth} $\longrightarrow$ \textbf{Sky} $\longrightarrow$ \textbf{Opaque scene}
+$\longrightarrow$ \textbf{Transparent dust} $\longrightarrow$ \textbf{HUD}.
+\end{center}
+The shadow target is the only separate framebuffer. Main colour rendering goes directly to framebuffer 0. Four-sample MSAA is requested at context creation; availability depends on the driver. Depth testing uses \code{LEQUAL}, back-face culling is normally enabled, and individual two-sided wings temporarily disable culling.
+
+Scene positions are transformed by $PVM$; normals use the inverse-transpose normal matrix so nonuniformly scaled ellipsoids/cylinders can be shaded correctly. World position and normal pass to the fragment shader along with light-space coordinates. Identical scene assemblies are traversed for the shadow and visible passes. Repeated vehicle parts are individual draws, while dust uses instancing and all worm teeth are combined into one mesh.
+\source{src/arrakis.cpp:640--676,1778--1782,1957--2110}
+
+\subsection{Material Design}
+Each material supplies diffuse colour, specular colour, shininess exponent, emission and a surface-mode flag. Mode 0 is ordinary material, mode 1 sand, and mode 2 rock strata. There are no metalness, roughness, alpha or imported normal-map fields.
+\begin{longtable}{L{0.28\linewidth}L{0.26\linewidth}L{0.38\linewidth}}
+\toprule\textbf{Material group}&\textbf{Representative diffuse RGB}&\textbf{Design purpose}\\\midrule\endhead
+Terrain & $(0.76,0.49,0.23)$ & Warm sand, low-exponent specular, slope/ripple/grain detail and wrapped diffuse lighting.\\
+Aircraft hull/dark parts & $(0.22,0.23,0.22)$ / $(0.13,0.14,0.13)$ & Dark mechanical silhouette with moderate highlights.\\
+Canopy/wing & $(0.06,0.08,0.11)$ / $(0.18,0.19,0.18)$ & High shininess 128/90; canopy specular 0.9 and wing specular 0.7. Both are opaque.\\
+Exhaust & $(1,0.55,0.12)$ & Orange emission increases under boost.\\
+Harvester chassis/treads/rust & $(0.42,0.34,0.25)$ / $(0.11,0.11,0.10)$ / $(0.48,0.24,0.12)$ & Separate body, dark tracks and weathered machinery.\\
+Spice scoop/vents & $(0.96,0.42,0.04)$ & Bright orange emission distinguishes spice-related fittings.\\
+Bridge glass/lights & $(0.1,0.2,0.25)$ / $(1,0.95,0.7)$ & Glossy bridge viewport and pale emissive ornaments; no real spotlight.\\
+Tank cradle/vessel/seams & $(0.24,0.23,0.22)$ / $(0.52,0.46,0.38)$ / $(0.18,0.17,0.16)$ & Contrasting support, metal vessel and reinforcing bands.\\
+Rock strata & $(0.42,0.28,0.17)$ / $(0.32,0.20,0.11)$ & Two earthy bands with procedural grain.\\
+Cyan/amber markers & $(0.05,0.5,0.55)$ / $(0.9,0.5,0.1)$ & Emissive colour coding separates safe base from evacuation groups.\\
+Worker cloth/visor & $(0.30,0.24,0.17)$ / $(0.08,0.20,0.27)$ & Matte clothing and glossy visor for small readable characters.\\
+Worm skin/rim & $(0.43,0.27,0.12)$ / $(0.49,0.31,0.14)$ & Low-shininess organic brown surface.\\
+Funnel/throat/teeth & $(0.15,0.075,0.029)$ / $(0.009,0.004,0.002)$ / $(0.58,0.43,0.24)$ & Recess darkens toward the throat; lighter teeth stand out against the cavity.\\
+\bottomrule
+\end{longtable}
+Emission adds a term to the emitting surface's colour. It does not cast light on nearby objects and does not imply bloom. These distinctions explain why markers and vents look bright without a point-light system.
+\source{src/arrakis.cpp:972--978,1051--1079,1214--1235,1321--1335,1389--1426,1520--1524; src/arrakis_worm.h:317--332}
+
+\subsection{Lighting Equation}
+One constant directional sun uses
+\begin{equation}
+L=\operatorname{normalize}(-0.35,0.12,-1),\quad
+C_{\mathrm{sun}}=(1.15,1.04,0.85),\quad C_{\mathrm{ambient}}=(0.34,0.38,0.44).
+\end{equation}
+Its low elevation creates long desert shadows. For normal $N$, viewing direction $V$ and halfway vector $H=\operatorname{normalize}(L+V)$, ordinary diffuse and Blinn--Phong specular are
+\begin{equation}
+d=\max(N\cdot L,0),\qquad s=\max(N\cdot H,0)^n.
+\end{equation}
+Here $n$ is material shininess. Sand instead uses a softer wrapped diffuse response
+\begin{equation}
+d_{\mathrm{sand}}=\max\left(\frac{N\cdot L+0.35}{1.35},0\right).
+\end{equation}
+This keeps dune slopes from becoming excessively dark. With shadow fraction $S$, the lit RGB is
+\begin{equation}
+C_{\mathrm{lit}}=C_{\mathrm{ambient}}C_{\mathrm{base}}
++(1-S)[dC_{\mathrm{sun}}C_{\mathrm{base}}+sC_{\mathrm{spec}}C_{\mathrm{sun}}]
++C_{\mathrm{emission}}.
+\end{equation}
+RGB products are componentwise. The shader is an efficient stylized lighting model, not a physically based metal/roughness BRDF. It has no point/spot lights, global illumination, environment-map lighting or ambient occlusion.
+\source{src/arrakis.cpp:713--762,1835--1840}
+
+\subsection{Procedural Textures and Surface Detail}
+\subsubsection{Sand ripples, slope tint and sparkle}
+No photographic or bitmap texture is loaded. Sand variation is calculated from world position:
+\begin{equation}
+r_1=0.5\sin(2.2x+1.4z)+0.5,\quad
+r_2=0.5\sin(0.8x-1.9z)+0.5,\quad r=(r_1+r_2)/2.
+\end{equation}
+Diffuse colour receives a slope multiplier $0.82+0.33\operatorname{clamp}(N_y,0,1)$ and a small ripple offset $(0.035,0.02,0.008)(r-0.5)f$, where
+\begin{equation}
+f=1-\operatorname{smoothstep}(25,120,\|\mathrm{viewPos}-P\|).
+\end{equation}
+Thus fine details fade in the distance, reducing distracting noise. A normal perturbation creates a bump-like ripple effect without displacing geometry:
+\begin{equation}
+N\leftarrow\operatorname{normalize}\left[N+(0.055\cos q,0,0.035\cos q)f\right],\quad q=2.2x+1.4z.
+\end{equation}
+Sparse sparkle is selected by the procedural hash
+\begin{equation}
+h=\operatorname{fract}[\sin(12.9898x+78.233z)\,43758.5453].
+\end{equation}
+For $h>0.88$, a sharp $\max(N\cdot H,0)^{120}$ term adds a small warm highlight, also scaled by $f$. The ripples and sparkle are appearance effects, not extra terrain vertices or physically individual sand grains.
+\source{src/arrakis.cpp:726--745}
+
+\subsubsection{Rock strata and grain}
+Rock-mode colour is multiplied by $0.88+0.12l+0.07g$, with
+\begin{equation}
+l=\sin(5y+\sin(0.8x)),\qquad
+g=\operatorname{fract}[\sin(P\cdot(12.3,42.8,27.1))\,43758.5453].
+\end{equation}
+The height-based bands suggest strata, while the hash provides small grain. Flat face normals and geometric perturbation give the rocks their faceted shape; the shader adds detail without additional meshes. Although the vertex format carries UVs, these patterns are world-coordinate functions rather than image sampling.
+\source{src/arrakis.cpp:720--724}
+
+\subsection{Shadows: Depth Map, Bias and Filtering}
+\subsubsection{Depth pass}
+A 2048$\times$2048 depth-only texture/framebuffer stores the nearest light-space surface. It uses nearest filtering, a depth-one border and no colour attachments. Framebuffer completeness is checked during initialization. Upload type \code{GL_FLOAT} does not by itself guarantee a 32-bit floating-point internal depth format.
+
+The sun view is centred on the ground below the aircraft, with light eye at that point plus $120L$. The orthographic volume is $[-90,90]$ in horizontal/vertical light coordinates and near/far 2/320. It covers a moving 180-unit region, not the entire 900-unit desert. All opaque scene parts are rendered with polygon offset $(2.5,4.0)$ to reduce self-shadow artefacts.
+
+\subsubsection{Shadow comparison}
+A visible fragment's light coordinates are divided by $w$ and remapped to $[0,1]$. Outside-map fragments are unshadowed. Bias is
+\begin{equation}
+b=\max[0.0035(1-N\cdot L),0.0008].
+\end{equation}
+The shader also estimates the receiver's depth slope from screen derivatives of projected light coordinates. Writing these derivatives as $d_x,d_y$, define
+\begin{align}
+D&=d_{x,x}d_{y,y}-d_{x,y}d_{y,x},\\
+S_p&=\frac{(d_{x,z}d_{y,y}-d_{y,z}d_{x,y},\;d_{x,x}d_{y,z}-d_{y,x}d_{x,z})}{D}.
+\end{align}
+If $|D|\le10^{-9}$, the slope is set to zero. For sample offset $o=(i,j)/\mathrm{textureSize}$, comparison tests
+\begin{equation}
+\mathrm{projectedDepth}+S_p\cdot o-b>\mathrm{storedDepth}.
+\end{equation}
+Twenty-five comparisons at $i,j\in\{-2,-1,0,1,2\}$ are averaged. This fixed $5\times5$ percentage-closer filter softens edges and the slope correction reduces surface acne. It is not contact-hardening or cascaded shadow mapping. The moving finite coverage can still show resolution/boundary artefacts, and there is no texel-snapped stabilization.
+\source{src/arrakis.cpp:687--711,923--950,1981--2006}
+
+\subsection{GPU Terrain Collapse During the Attack}
+The attack visually lowers terrain around the worm in both colour and shadow vertex shaders. With horizontal distance $d_w$ from worm centre and attack time $a$,
+\begin{equation}
+\Delta y=13\operatorname{smoothstep}(7,14,a)[1-\operatorname{smoothstep}(5,48,d_w)].
+\end{equation}
+The vertex height is reduced by $\Delta y$, reaching up to 13 units near the centre and tapering to zero at radius 48. It strengthens the swallowing scene and keeps shadow geometry consistent with visible geometry.
+
+This deformation is \textbf{visual and GPU-only}. CPU height queries, object placement, aircraft/camera clearance, particle-ground checks and original terrain normals are not changed. Therefore it is not persistent terrain destruction or a collision-accurate crater; objects and lighting can disagree with the depressed surface. This limitation is important when explaining the feature honestly.
+\source{src/arrakis.cpp:648--658,783--786,1996--2000,2055--2057}
+
+\subsection{Procedural Sky and Sun}
+An oversized full-screen triangle reconstructs a world-view ray from inverse view-projection. It is a generated background, not an image cubemap/skybox. For upward ray component $e=\operatorname{clamp}(r_y,0,1)$, the shader first blends dusty horizon $(0.90,0.74,0.47)$ to low blue $(0.48,0.69,0.88)$ over $\operatorname{smoothstep}(0,0.13,e)$, then blends toward high blue $(0.10,0.34,0.72)$ with $e^{0.65}$.
+
+For $u=\max(r\cdot L,0)$, sun contributions are
+\begin{align}
+D_{\mathrm{sun}}&=1.9\operatorname{smoothstep}(\cos0.80^\circ,\cos0.58^\circ,u),\\
+C_{\mathrm{corona}}&=0.30u^{180},\qquad C_{\mathrm{haze}}=0.10u^{12}.
+\end{align}
+Their sum times sun colour is added to the sky. Depth writes are disabled so the background does not occlude objects. There are no clouds, moons/stars, physically integrated atmospheric scattering or day/night cycle.
+\source{src/arrakis.cpp:833--876,952--965,2018--2033}
+
+\subsection{Tone Mapping and Distance Fog}
+The surface shader applies a compact colour compression/gamma-like mapping
+\begin{equation}
+C_{\mathrm{mapped}}=\left(\frac{C_{\mathrm{lit}}}{C_{\mathrm{lit}}+0.8}\right)^{1/1.8}.
+\end{equation}
+Then distance $d=\|\mathrm{viewPos}-P\|$ controls fog:
+\begin{equation}
+F=1-e^{-(0.0022d)^2},\qquad C_{\mathrm{out}}=(1-F)C_{\mathrm{mapped}}+F(0.90,0.74,0.47).
+\end{equation}
+Distant geometry approaches the warm horizon colour, producing a dusty sense of scale. This is analytic distance fog, not volumetric/height fog. Tone mapping occurs per scene fragment; there is no separate HDR colour target, bloom extraction, blur chain or full-screen post-processing compositor. The sky/dust/HUD have their own simpler shaders rather than sharing this surface calculation.
+\source{src/arrakis.cpp:764--770}
+
+\subsection{Instanced Transparent Dust}
+Each dust particle is a quad oriented with the camera's right/up vectors:
+\begin{equation}
+P_{\mathrm{world}}=P_{\mathrm{centre}}+\mathrm{camRight}(x_{\mathrm{quad}}s)+\mathrm{camUp}(y_{\mathrm{quad}}s).
+\end{equation}
+The fragment shader discards points outside a UV-centred radius 0.5. A soft circular edge uses the mask $1-\operatorname{smoothstep}(0,0.5,r)$. Lifetime alpha fades in/out using
+\begin{equation}
+f=\operatorname{clamp}(\mathrm{life}/0.5,0,1)
+\operatorname{clamp}((\mathrm{maxLife}-\mathrm{life})/0.3,0,1).
+\end{equation}
+Particles are sorted far-to-near by squared camera distance, streamed as instance data and drawn in one instanced indexed call. Alpha blending uses source-alpha/one-minus-source-alpha; depth testing stays enabled, while depth writes/culling are disabled. This lets dust blend over the scene without blocking later dust through opaque depth writes.
+
+The pool's motion and emitters are described in Section 3. The dust shader does not calculate scene lighting, shadows or its own fog. ``Soft'' refers to the alpha edge, not depth-aware soft-particle intersection fading. This is a visual dust system, not smoke/fluid physics. Instancing reduces draw overhead for 2,400 particles, unlike the individually submitted vehicle parts.
+\source{src/arrakis.cpp:794--831,1810--1821,2066--2110}
+
+\subsection{Inspection and Robustness Features}
+Wireframe helps inspect triangle topology; the HUD is explicitly kept filled and readable. Fullscreen and resized framebuffer aspect ratios are supported. The HUD saves/restores relevant OpenGL state, uses screen-space alpha blending and is drawn after all world effects. Normal exit explicitly frees buffers, vertex arrays, shader programs, shadow resources, HUD/sky/particles and the worm meshes.
+
+Shader compile/link and shadow-framebuffer checks print diagnostics. Graphical smoke tests inspect OpenGL errors. These improve demonstration reliability but do not constitute exhaustive device compatibility testing. Because wireframe is a global polygon mode, it can also affect sky/dust and the shadow pass; it is an inspection mode rather than an alternate polished rendering pipeline.
+\source{src/arrakis.cpp:881--950,1623--1626,2158--2200; src/arrakis_hud.h:68--107,512--549; src/arrakis_worm.h:260--265}

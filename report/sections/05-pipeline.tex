@@ -1,0 +1,153 @@
+\clearpage
+\section{Complete Project Pipeline}
+\subsection{Source Organization and Responsibilities}
+\begin{longtable}{L{0.32\linewidth}L{0.60\linewidth}}
+\toprule\textbf{File or directory}&\textbf{Role}\\\midrule\endhead
+\code{src/arrakis.cpp} & Main application; terrain/mesh helpers; shaders/materials; particles; model assemblies; shadow and scene passes; input, camera and timing integration; smoke-test capture; cleanup.\\
+\code{src/arrakis_game.h} & Mission data, aircraft motion, camera offsets, route, releases, hazards, winch/delivery and scoring.\\
+\code{src/arrakis_worm.h} & Body, mouth, teeth, throat and lip mesh construction; worm animation pose and drawing.\\
+\code{src/arrakis_hud.h} & Bitmap glyphs, overlay geometry/shader, layout, radar, counters, timers and menus.\\
+\code{src/arrakis_audio.h} & Sound search/loading, miniaudio engine, positional mixing, event detection, mute and shutdown.\\
+\code{tests/arrakis_tests.h} & Headless test runner and 27 mission/control cases.\\
+\code{third_party/} & Generated GLAD OpenGL loader and miniaudio implementation. These are third-party support libraries, not original project algorithms.\\
+\code{assets/audio/} & Eight runtime sound effects and retained license notice.\\
+\code{CMakeLists.txt}, \code{Arrakis_001.vcxproj}, \code{vcpkg.json} & Primary CMake build, alternative Visual Studio project and optional GLM dependency manifest.\\
+\code{docs/}, \code{tools/} & Existing explanation chapters, proposal/reference images, generated source-reference PDF/manifest and Python documentation generator. Reference images are not loaded as scene assets.\\
+\code{report/} & This independent LaTeX report, real screenshot figures, capture/verification scripts and compiled submission PDF.\\
+\bottomrule
+\end{longtable}
+The application compiles the main C++ file, GLAD C loader and miniaudio implementation. The project headers are included in a dependency-aware order into the main translation unit; they are not separately linked gameplay plugins. GLM supplies vector/matrix operations, GLFW provides the window and events, GLAD loads graphics entry points, and miniaudio handles playback.
+
+\subsection{From Source to a Running Frame}
+\begin{enumerate}
+\item \textbf{Configure and compile:} CMake locates headers/libraries, compiles C++17 sources, links OpenGL/GLFW and copies audio assets beside the executable.
+\item \textbf{Choose launch mode:} \code{--test-game} runs headless tests before any window/audio initialization. A graphical smoke flag selects a reproducible rendering setup; ordinary launch starts the title screen.
+\item \textbf{Create the graphics context:} GLFW requests OpenGL 3.3 core, a 1280$\times$720 window, four-sample MSAA and VSync. GLAD resolves OpenGL functions. Startup prints graphics device, API version and resolution.
+\item \textbf{Initialize resources:} Generate terrain/basic shapes/worm meshes; create VAOs/VBOs/index buffers; compile embedded GLSL shaders; allocate shadow, sky, particle and HUD resources; initialize audio and mission state.
+\item \textbf{Receive input:} GLFW callbacks store held keys and normalized mouse position, process mode toggles and handle resize/focus/cursor events.
+\item \textbf{Update simulation:} Measure/clamp time, step flight and mission logic, update the harvester and crew, apply hazards/interactions and refresh presentation particles/animation when not paused.
+\item \textbf{Update camera and audio:} Compute safe following view/projection, update listener/source positions, continuous sound parameters and one-shot events.
+\item \textbf{Render:} Draw shadow depth, sky, lit opaque objects, sorted instanced dust and filled HUD. Swap buffers and process events for the next frame.
+\item \textbf{Shut down:} Release meshes/buffers/programs/shadow/HUD/particle resources and audio, destroy the window and terminate GLFW.
+\end{enumerate}
+No asset-import or offline mesh-conversion stage is needed: source functions generate all graphics at startup. Shader source is embedded, so shader compilation happens on the graphics driver at runtime, with errors printed if compilation/linking fails.
+\source{src/arrakis.cpp:1697--2210; CMakeLists.txt:1--56}
+
+\subsection{Complete User Controls}
+\begin{longtable}{L{0.19\linewidth}L{0.73\linewidth}}
+\toprule\textbf{Input}&\textbf{Action}\\\midrule\endhead
+Enter & Start from title or advance from debrief to the next wave. During active flight it does not restart the mission.\\
+Mouse hover & Horizontal offset turns aircraft/camera; vertical offset changes following-camera elevation. No mouse button is required. Centre dead zone stops new turn input.\\
+W / S & Heading-relative forward/reverse thrust.\\
+A / D & Heading-relative left/right strafe, with heading unchanged.\\
+Q / E & Increase/decrease requested terrain-following height.\\
+Space & Brake and descend toward rescue height; winch eligible nearby crew or unload over the cyan pad.\\
+Left Shift & Rechargeable movement boost; release after depletion to unlock it.\\
+C & Cycle wide, close and tactical camera presets.\\
+Left / Right arrows & Turn, as a backup or addition to mouse steering.\\
+Up / Down arrows & Adjust following-camera elevation offset.\\
+P & Pause/resume an active mission.\\
+M & Master mute/unmute.\\
+R & Retry/reset the current mission wave.\\
+F & Toggle filled versus wireframe scene rendering. The HUD remains filled.\\
+F11 & Toggle primary-monitor fullscreen; return to a 1280$\times$720 window.\\*
+Esc & Close the application.\\
+\bottomrule
+\end{longtable}
+Window-focus loss clears held input, mouse axes and turn inertia and pauses an active mission. Focus regain does not automatically resume it. Mouse enter/leave clears steering, while resize, fullscreen and mission/resume operations centre the cursor. Minimized windows wait for events rather than repeatedly drawing. There are no scroll, gamepad, mouse-button, weapon or tank-deployment controls.
+\source{src/arrakis.cpp:1584--1661,1743--1760,1857--1862}
+
+\subsection{HUD and Radar Implementation}
+The HUD is built with OpenGL instead of an external interface framework. A built-in $5\times7$ bitmap font converts active glyph cells into coloured rectangle triangles. Strings are uppercased for the supported glyph set; unknown glyphs use a question-mark pattern. This avoids a runtime font texture or font-file dependency.
+
+The interface exposes all important mission state: secured/36, aboard/8 with cabin indicators, inside/outside/lost crew, released groups, mission wave, breach/extraction timer, actual altitude, horizontal speed, smoothed FPS, boost resource, mute status, pursuit bar and interaction progress. Context messages explain excessive height, a full cabin, winching, unloading, harvester loss and aircraft loss. At 15 seconds or less to breach, the warning becomes more urgent. Title, pause and debrief use dimmed panels with relevant instructions.
+
+The north-up radar maps world $X,Z$ in $[-300,300]$ to a small screen rectangle. It shows the base as a cyan outlined symbol, outside crew amber, harvester white, worm red and aircraft as a cyan heading-oriented triangle. It does not rotate with the camera. The label ``worm range'' displays the worm-to-harvester gap, not aircraft-to-worm distance, a useful distinction when interpreting the telemetry.
+
+Four centre guide brackets show the mouse dead-zone corners during active unpaused flight. Layout adapts to framebuffer size through compact/short modes, wrapping and limited action text; radar or telemetry may be omitted if space is insufficient. Text and panels are rendered in screen space with scene wireframe disabled for this pass.
+\source{src/arrakis_hud.h:149--222,257--451,519--523; src/arrakis.cpp:2130--2160}
+
+\subsection{Audio Pipeline and Event Design}
+The miniaudio engine loads the eight effects below. Sources use inverse-distance attenuation with effect-specific minimum/maximum ranges, while the listener follows camera eye/look direction with world-up $Y$. Vehicle loops, distress calls and the worm are therefore located in the 3D scene rather than played as a single undifferentiated soundtrack.
+\begin{longtable}{L{0.30\linewidth}L{0.12\linewidth}L{0.50\linewidth}}
+\toprule\textbf{Effect}&\textbf{Playback}&\textbf{Purpose and behaviour}\\\midrule\endhead
+\code{ornithopter_flight.mp3} & Loop & Aircraft engine/wing ambience; pitch follows speed and volume changes with boost.\\
+\code{ornithopter_boost.mp3} & Loop & Fades toward audible volume during active boosting, fades out otherwise.\\
+\code{worm_rumble.mp3} & Loop & Positional threat sound; volume strengthens as the harvester gap decreases.\\
+\code{worm_breach.mp3} & One-shot & Starts once near the breach transition.\\
+\code{harvester_engine.wav} & Loop & Moving machinery sound while flying and before attack time 11.\\
+\code{rescue_winch.wav} & One-shot & Pickup progress/cabin increase feedback.\\
+\code{rescue_safe.wav} & One-shot & Confirms secured-score increase on delivery.\\
+\code{crew_help.wav} & One-shot & Periodic nearby distress calls.\\
+\bottomrule
+\end{longtable}
+Aircraft pitch target is $0.92+\operatorname{clamp}(v/42,0,0.38)$, smoothed at rate 6. Boost volume approaches 0.90 at rate 8 while boosting. Worm rumble varies using $\operatorname{mix}(1.2,0.8,\operatorname{clamp}(g/200,0,1))$. Events are detected from state changes, such as increased cabin count or increased secured count, instead of replaying a sound every render frame.
+
+The configured attenuation ranges are 12--150 for aircraft flight/boost, 30--320 for rumble, 45--380 for breach, 18--200 for the harvester, 15--120 for winching, 20--140 for delivery and 16--85 for crew calls. A nearby call timer initially waits three seconds, then uses 5.5--8.4 seconds between qualifying calls; otherwise it checks again after two seconds. The update's nearest-crew fallback is the harvester position when no outside crew exist, so this audio helper is a feedback approximation rather than a complete dialogue/voice-state system.
+
+Audio searches \code{assets/audio/} under the current working directory and up to four ancestor levels. Run from the project root or executable directory. This is not executable-relative resource lookup for an arbitrary launch directory. Device initialization failure leaves the game playable in silence; a missing individual effect similarly does not terminate rendering.
+
+Mute/pause set master volume to zero rather than suspending underlying playback. A one-shot may finish while inaudible. Flight ambience can continue on title/debrief; the harvester/rumble are mission-phase gated. There is no music player, voice-dialogue system or device-selection menu. The existing Kenney notice is retained, but it should not be treated as per-file proof of the origin of every unrelated sound.
+\source{src/arrakis_audio.h:11--25,62--126,158--276; src/arrakis.cpp:1963--1971}
+
+\subsection{Build, Dependencies and Distribution}
+The primary build requires CMake 3.20+, a C++17 compiler, OpenGL 3.3-capable graphics, GLFW, matching GLAD headers and GLM. This installation uses local discovery hints under \code{E:/glfw_nec} and \code{E:/glm}; the libraries are not all bundled as complete portable dependencies. The vendored GLAD implementation was generated for GL 4.6 core, so external headers must match that loader even though the application requests only OpenGL 3.3 functionality.
+\begin{lstlisting}
+cmake -S . -B build/rescue -G "Visual Studio 17 2022" -A x64
+cmake --build build/rescue --config Release
+.\build\rescue\Release\Arrakis.exe
+\end{lstlisting}
+On another machine, set the dependency locations during CMake configuration:
+\begin{itemize}
+\item \code{GLAD_INCLUDE_DIR}: matching GLAD headers.
+\item \code{GLFW_INCLUDE_DIR}: GLFW headers.
+\item \code{GLM_INCLUDE_DIR}: GLM headers.
+\item \code{GLFW_LIBRARY}: the GLFW library binary.
+\end{itemize}
+The optional vcpkg manifest installs GLM only, not GLFW or GLAD. The build definition \code{GLFW_INCLUDE_NONE} prevents GLFW from including conflicting OpenGL headers. CMake links GLFW/OpenGL, compiles the loader/audio implementation and copies sound assets post-build. The alternative Visual Studio project uses v143/Windows SDK and laboratory-specific x64 paths; Win32 configurations do not have equivalent complete dependency setup.
+
+Distribute the Release executable with its copied \code{assets/audio/} directory. There is no installer or packaging target. The graphics are generated at startup, so there is no model/texture folder to ship. Verify the driver and library linkage on the intended demonstration machine rather than assuming an executable built on one computer runs identically everywhere.
+\source{CMakeLists.txt:1--56; Arrakis_001.vcxproj; vcpkg.json; README.md:64--85}
+
+\subsection{Testing and Observed Results}
+Verification for this report used the current Release build on Windows with Intel Iris Xe graphics and an OpenGL 3.3 context at 1280$\times$720. These are actual command results, not inferred passes.
+\begin{tabularx}{\linewidth}{L{0.35\linewidth}Y}
+\toprule\textbf{Verification}&\textbf{Observed result}\\\midrule
+Release build & CMake/MSBuild completed successfully.\\
+CTest & \code{RescueMissionLogic} passed; 1/1 registered tests passed.\\
+\code{--test-game} & 27/27 cases, 1,057 checks, zero failures.\\
+\code{--smoke-test} & Passed 120 rendered frames; scene screenshot captured.\\
+\code{--smoke-breach} & Passed 120 rendered frames; breach screenshot captured.\\
+\code{--smoke-mouse} & Passed 120 frames and heading/camera alignment checks; tactical-control screenshot captured.\\
+\code{--smoke-pursuit} & Passed 120 rendered frames; pursuit screenshot captured.\\
+\bottomrule
+\end{tabularx}
+
+The headless cases cover reset/title and pause, scheduled release and fixed destinations, pickup and cabin capacity, height/speed restrictions, base-only delivery, swallowing, carried survivors after breach, collision and saved score, timeout accounting, retry, wave limits, full rescue state flow, analytic routes, hazard boundaries, cursor normalization/invalid coordinates, mouse/arrows, yaw-relative translation, damped steering, frame-rate comparisons and all camera offsets/pitch limits.
+
+One input-only test completed five rescue flights, saved all 36 with zero losses in about 110.445 simulated seconds, used real boost and maintained minimum clearance 3. It uses a scripted controller driving keyboard-equivalent inputs; it is not a recording of a human player. Other mechanics tests deliberately place state/positions to isolate conditions. Tests reconcile all 36 workers and the eight-seat limit.
+
+Smoke tests inspect OpenGL errors, not golden-image similarity. They run 120 frames at a fixed simulation step and optionally save the last frame as a 32-bit BMP. Mouse smoke also changes camera every 40 frames and checks alignment. These modes require a graphics desktop and are separate from the one headless CTest registration. Passing them confirms the exercised paths, not every possible GPU, window mode or human interaction.
+\begin{lstlisting}
+ctest --test-dir build/rescue -C Release --output-on-failure
+.\build\rescue\Release\Arrakis.exe --test-game
+.\build\rescue\Release\Arrakis.exe --smoke-test
+.\build\rescue\Release\Arrakis.exe --smoke-breach
+.\build\rescue\Release\Arrakis.exe --smoke-mouse
+.\build\rescue\Release\Arrakis.exe --smoke-pursuit
+\end{lstlisting}
+\source{tests/arrakis_tests.h:7--1040; src/arrakis.cpp:1666--1704,1826--1833,2165--2180}
+
+\subsection{Documentation and Report Production}
+The existing documentation pipeline reads seven Markdown chapters and selected source, configuration and vendor files. It uses ReportLab to generate an A4 explanation PDF with source appendices, and writes a manifest containing hashes and line counts. It is separate from the build and does not run game tests. Its recorded main-source snapshot is older than the current modified source; this report uses current implementation evidence instead of repeating obsolete terrain/model claims.
+
+This submission has an independent LaTeX pipeline. \code{report.tex} loads six readable section files and PNG screenshots. \code{capture_figures.py} runs the four smoke modes and converts their BMP captures to PNG using Pillow. \code{build.ps1} runs XeLaTeX twice for contents/cross-references and copies the final PDF to \code{report/Arrakis_Report.pdf}; \code{verify_report.py} checks expected content and layout warnings and renders preview sheets. Generated auxiliary files are kept in \code{report/build/}.
+\begin{lstlisting}
+# From the project root; XeLaTeX/MiKTeX must be installed.
+pwsh -File report/build.ps1
+# Optional: regenerate figures from a built project (Pillow).
+python report/capture_figures.py
+# Optional PDF checks/previews (PyMuPDF and Pillow).
+python report/verify_report.py
+\end{lstlisting}
+\source{tools/generate_docs.py; tools/requirements.txt; report/report.tex; report/build.ps1; report/capture_figures.py; report/verify_report.py}

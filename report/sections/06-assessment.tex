@@ -1,0 +1,102 @@
+\clearpage
+\section{Assessment Coverage and Demonstration}
+\subsection{Requirement-to-Evidence Checklist}
+The assessment is based on the report, presentation and video. Each should identify the same implemented features and explain what the viewer is seeing. The following table makes the assignment requirements explicit.
+\begin{longtable}{L{0.32\linewidth}L{0.62\linewidth}}
+\toprule\textbf{Requirement}&\textbf{Coverage and evidence}\\\midrule\endhead
+Mandatory project report & This LaTeX report explains the objects, equations, controls, dynamic scenes, graphics, audio, build, testing and complete pipeline. A compiled PDF accompanies the source.\\
+Exactly ten slides & The next subsection assigns all ten slide numbers. Slide 1 is Introduction, Slide 2 is Outline, and Slide 10 is Thank You and closing remarks.\\
+One or two object slides with screenshots & Slides 3 and 4 inventory the objects using actual project screenshots. Figures in Section 2 provide reusable scene, breach and pursuit images.\\
+Curved objects and equations & Section 2 derives the height field, ellipsoid, cylinder, ring, worm body, mouth and curved tooth constructions. Slide 5 summarizes the key equations.\\
+Complex motion equations and design & Section 3 explains acceleration, terrain following, route motion, evacuation, wing motion, worm phases and particle evolution; Slide 6 selects the principal equations and their visual effects.\\
+Controllable dynamic objects & The aircraft responds to keyboard and mouse input; winch and delivery affect worker states and score. Sections 3 and 5 explain the rules; Slide 7 and the recording show them.\\
+Camera movement and game-like controls & Three heading-following camera presets, mouse steering, arrows, thrust, strafe, height, brake, boost and mission controls are documented. Show camera switching while flying, not only a static camera.\\
+Dynamic objects and scenes, even for a small project & Moving aircraft/harvester/workers/worm, wing and machinery articulation, instanced particles, evacuation events and the breach/extraction transition provide both object motion and changing scene conditions.\\
+Additional features & Filtered shadows, procedural material detail, atmosphere, sky/sun, dust instancing, radar/HUD, audio, wireframe, fullscreen and testing are explained in Sections 4--5.\\
+Shadows and textures & Real depth-map shadows and shader-generated surface variation are implemented. Texture detail here is procedural, not imported bitmap textures. The only sampled texture is the shadow depth map.\\
+``Karpov objects'' & The assignment does not define this term and the project does not identify an object under that name. No mark is claimed for it. The procedural curved objects are documented by their actual mathematical definitions; teacher clarification is needed before claiming this category.\\
+Two-minute video at the end & A 120-second shot list follows. Play the video after Slide 10 so it is the final demonstration artifact; use it to show all object classes, motions and dynamic scenes together.\\
+Complete, self-explanatory evidence & Use labels, object close-ups, control captions, equation explanations, state transitions and a visible delivery score change. Explain hidden implementation details on slides/report rather than expecting a teacher to infer them.\\
+Completion within one week & The assignment states that next week is the final week. The final PDF, ten-slide deck and 120-second video must be ready within that window; no exact calendar deadline was provided.\\
+Class-time demonstrations if teachers are available & Prepare an immediately runnable Release build and a pre-opened recording. Approximately 30 projects in 90 minutes implies about three minutes per student on average, so avoid lengthy setup or waiting for the full pursuit.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Marking Categories}
+\begin{tabularx}{\linewidth}{L{0.35\linewidth}L{0.15\linewidth}Y}
+\toprule\textbf{Category}&\textbf{Given marks}&\textbf{Report evidence}\\\midrule
+Project report & 10 & Complete implementation and pipeline explanation, readable equations and actual screenshots.\\
+Objects & 5 & Procedural object inventory and geometry construction.\\
+Complex motion equations and their design & Not specified & Coupled flight, route, wing, worker, worm and particle equations.\\
+Controllable dynamic objects & Not specified & Aircraft control, cameras and rescue interaction.\\
+Additional features & Not specified & Shadows, procedural appearance, atmosphere, dust, HUD/radar, audio and engineering features.\\
+\bottomrule
+\end{tabularx}
+Only the two numerical weights stated in the instructions are reproduced. The remaining weights and total marks are not invented.
+
+\subsection{Exact Ten-Slide Presentation Structure}
+The slides should prioritize readable diagrams and screenshots over dense source listings. Explain one equation by naming its inputs and the visible effect it creates.
+\begin{longtable}{L{0.06\linewidth}L{0.21\linewidth}L{0.65\linewidth}}
+\toprule\textbf{No.}&\textbf{Title}&\textbf{Content and visual evidence}\\\midrule\endhead
+1 & Introduction & Project name, course, author/roll, desert-rescue objective, C++17/OpenGL 3.3 and one strong scene screenshot. State that the aircraft is player controlled.\\
+2 & Outline & Objects and curved geometry; motion and scene changes; controls/cameras; rendering and additional features; results and demonstration.\\
+3 & Objects: Desert and Vehicles & Screenshot of the landing pad/aircraft/terrain. Label dune mesh, rocks, ornithopter, harvester and three spice tanks. Briefly explain reusable mesh assembly.\\
+4 & Objects: Rescue and Sandworm & Breach/pursuit screenshot and annotated worker/beacon details. Identify workers, amber evacuation markers, cyan safe pad, winch line, worm body/mouth/teeth and dust.\\
+5 & Curved Objects and Equations & Present the dune height field, ellipsoid/ring parametrization and worm radial surface/curved-tooth construction. Link each equation to an object on Slides 3--4.\\
+6 & Motion and Dynamic Scenes & Show damped velocity, articulated wing oscillation, smooth harvester route, worker evacuation and the worm approach--rise--attack--retreat sequence. Name the pursuit and final-extraction phases.\\
+7 & Controls and Camera & Explain W/S, A/D, Q/E, mouse/arrows, Space, Shift and C. Include a camera comparison. State pickup limits, eight-seat capacity and delivery-only scoring.\\
+8 & Rendering and Extra Features & Diagram: shadow depth pass, sky, lit scene, transparent dust, HUD. Show shadow/procedural texture detail, fog, sun, radar, sound and wireframe/fullscreen support.\\
+9 & Results and Evaluation & Summarize CTest and four smoke-test results, the completed rescue interaction and known limits. Explain how report, slides and video jointly cover the rubric.\\
+10 & Thank You & ``Thank You'' with a closing statement: procedural graphics, mathematical motion and player interaction form a complete real-time rescue scene. Indicate that the two-minute demonstration follows immediately.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Two-Minute Video Plan}
+This is a \textbf{recording plan}, not a claim that screenshots are a finished video. Export a standard playable video with a total runtime of 120 seconds. The recorded scene should use the normal interactive application; smoke modes are useful for reproducible still images and inspection but do not substitute for showing player input.
+\begin{longtable}{L{0.16\linewidth}L{0.76\linewidth}}
+\toprule\textbf{Time}&\textbf{Required shot and explanation}\\\midrule\endhead
+00:00--00:10 & Show project title and the overall desert. Briefly identify the rescue objective and the cyan base. Include the HUD so the initial crew count is visible.\\
+00:10--00:25 & Inspect terrain and rocks, then aircraft and harvester. Show wings flapping, the harvester moving and its machinery turning. Pan past all three spice tanks and their structural detail.\\
+00:25--00:40 & Demonstrate W/S thrust, A/D strafe, Q/E altitude and mouse/arrow turning. Show Shift boost and Space braking. Keep a small caption naming the control used.\\
+00:40--00:50 & Cycle wide, close and tactical cameras with C while keeping the same scene/action. Show the following behavior, elevation changes and terrain-following aircraft.\\
+00:50--01:10 & Show workers evacuating and running to amber markers. Perform low, slow winching with the line visible and show the aboard count increasing. Include close views of a worker and a beacon.\\
+01:10--01:25 & Fly to the cyan pad and unload. Show the secured count increasing and the aboard count decreasing. This proves that interaction changes game state, not just visual animation.\\
+01:25--01:45 & Show the worm wake/approach, rise, detailed mouth/curved teeth, attack and harvester sinking. Include dust, shadows and surviving worker groups in the same sequence.\\
+01:45--01:55 & Show final extraction, radar/danger feedback and debrief outcome. Briefly compare solid and wireframe views. Preserve a short sample of in-game audio.\\
+01:55--02:00 & Close with the project name, author and a concise feature summary. End at 02:00.\\
+\bottomrule
+\end{longtable}
+
+The pursuit normally lasts several minutes, so record its stages in separate takes and edit them into the 120-second video. Caption a transition such as ``later in the mission'' instead of implying that the entire pursuit occurs in two minutes. The video should combine the objects and motions in context; an equation diagram may briefly overlay the footage, but must not obscure the actual gameplay or counters. Check that text is readable, all objects have appeared, sound is audible without clipping, and the final file opens on the demonstration computer.
+
+\subsection{Submission and One-Week Completion Plan}
+\begin{enumerate}
+\item Verify the Release build and this report against the current source; inspect every figure and equation. Keep the report PDF and its LaTeX source together.
+\item Prepare exactly ten slides using the structure above. Use the supplied real screenshots, adding close-up captures where needed for object clarity.
+\item Record ordinary gameplay and edit a 120-second video using the checklist. Confirm every object class, controllable motion and scene transition is represented.
+\item Package the executable with \code{assets/audio/}, the report, slides and video. Test the package and OpenGL/audio availability on the intended machine before class.
+\item Finish all artifacts within the stated one-week window; next week is identified as the final week. Keep an offline copy and a pre-recorded demonstration in case class-time scheduling or runtime setup is unavailable.
+\end{enumerate}
+During a short live slot, open the video immediately and use the remaining time for one brief controllability or rescue demonstration. Report and slides should already answer how the objects are built, what the equations do, and which additional features are actually implemented.
+
+\section{Limitations and Closing Remarks}
+The project uses authored motion and procedural graphics rather than a general-purpose physics engine. It does not provide persistent save files, multiplayer, imported models, photographic texture assets, skeletal animation, terrain destruction, or a general collision/navigation system. The chase and attack are governed by mission timing and proximity rules. Workers follow direct evacuation paths rather than a navigation mesh. The aircraft camera's close preset is not an interior cockpit model.
+
+Visual effects are lightweight real-time approximations: the shadow map covers a finite moving region, fog is analytic rather than volumetric, dust is a point-particle system and material detail is generated in the fragment shader. There is no bloom or separate full-screen post-processing pipeline. The spice tanks are fixed decorations, not player-deployable devices. ``Karpov objects'' cannot be claimed without a definition from the instructor.
+
+Despite these deliberate limits, the implemented project satisfies the essential graphics goals: multiple recognizable objects, mathematically generated curved surfaces, complex coordinated motion, game-like controllability, dynamic scene changes and meaningful additional features. The report, presentation outline and video plan make these aspects explicit so that an evaluator can understand both the visible result and its implementation without relying on follow-up questions.
+
+\section{Implementation References}
+The implementation references throughout this report point to the current project files. Local code is the primary evidence; external references below identify the APIs and concepts used, not copied project features.
+\begin{itemize}
+\item \code{src/arrakis.cpp}: procedural meshes, materials/shaders, shadow map, particles, object drawing, GLFW callbacks and application loop.
+\item \code{src/arrakis_game.h}: deterministic mission state, aircraft/camera updates, evacuation, rescue, pursuit and scoring rules.
+\item \code{src/arrakis_worm.h}: detailed sandworm meshes, curved teeth, pose and drawing.
+\item \code{src/arrakis_hud.h}: bitmap text, overlay meshes, radar and mission instrumentation.
+\item \code{src/arrakis_audio.h}: miniaudio integration, sound loading, playback/mixing and fallback.
+\item \code{tests/arrakis_tests.h}, \code{CMakeLists.txt}, \code{Arrakis_001.vcxproj}, \code{vcpkg.json}: verification and build integration.
+\item \code{README.md}, \code{tools/generate_docs.py}, \code{tools/requirements.txt}: usage and the existing documentation pipeline. Earlier generated documentation can describe an older source snapshot; this report prioritizes current code.
+\item \code{demo_REPORT.pdf}: cover identity, A4 layout and readable heading/table style used as the report template.
+\item Khronos OpenGL documentation: \url{https://www.khronos.org/opengl/}; GLFW documentation: \url{https://www.glfw.org/docs/latest/}; GLM documentation: \url{https://glm.g-truc.net/}; miniaudio documentation: \url{https://miniaud.io/}.
+\item Audio attribution is retained in \code{assets/audio/Kenney-License.txt}; vendored library licenses remain with their distributed sources.
+\end{itemize}

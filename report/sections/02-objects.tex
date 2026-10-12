@@ -1,0 +1,252 @@
+\section{Objects and Procedural Geometry}
+\subsection{Actual Scene Screenshots}
+These figures come from the current application, not reference artwork. They show the shared scene context; the inventory and equations below explain details that are too small to inspect in a wide view. A still image illustrates appearance, while the presentation/video should demonstrate movement and interaction.
+\shot{scene.png}{Initial rescue scene: player aircraft over the cyan landing base, dune terrain, rocks, distant harvester, atmospheric dust and mission HUD. Captured with \code{--smoke-test}.}{fig:scene}
+\shot{breach.png}{Worm breach: open mouth with dense curved teeth, player aircraft, crew in the distance, dust and long directional shadows. This smoke setup advances to breach+7 seconds before capture.}{fig:breach}
+\clearpage
+\shot{pursuit.png}{Pursuit scene after evacuation: sandworm at left, amber worker groups on the ridge, aircraft at right and radar/danger feedback. The setup advances to 110 mission seconds, so crew are already outside.}{fig:pursuit}
+\shot{controls.png}{Tactical camera in the mouse-control smoke test: aircraft, cyan base, terrain and shadows viewed from above. The test changes steering and camera presets over 120 frames.}{fig:controls}
+\clearpage
+
+\subsection{Mesh Data and Model Assembly}
+Each scene vertex contains a 3D position, 3D normal and 2D UV coordinate. A mesh owns a vertex array object (VAO), vertex buffer (VBO), element/index buffer (EBO) and index count. Triangles are drawn with unsigned integer indices. Most generated geometry is uploaded once with \code{GL_STATIC_DRAW}; the deforming worm body uses a dynamic buffer.
+
+Complex objects reuse a small set of shapes. For a part with local translation, rotation and scale, the assembly helper forms
+\begin{equation}
+M=M_{\mathrm{root}}T R_y R_x R_z S.
+\end{equation}
+With column vectors, scale acts first, followed by local rotations, translation and the parent's transform. Parent matrices attach wings, machinery and decorations to their respective vehicles. The same object traversal is used in the shadow and visible passes, preventing separate manually maintained shadow models.
+\source{src/arrakis.cpp:261--309,980--1020; src/arrakis_worm.h:274--279}
+
+\subsection{Reusable Shapes and Curved Equations}
+\begin{longtable}{L{0.23\linewidth}L{0.37\linewidth}L{0.32\linewidth}}
+\toprule\textbf{Shape}&\textbf{Construction}&\textbf{Runtime topology}\\\midrule\endhead
+Cube & Six independent faces, side length 1, flat normals; used for panels, tracks, fins and markings. & 24 vertices, 12 triangles.\\
+Cylinder & Radius 0.5, height 1 along local $Y$, 24 slices, separately capped ends. & 102 vertices, 96 triangles.\\
+UV sphere & Radius 0.5, 16 latitude bands, 24 longitude sectors; smooth radial normals. & 425 vertices, 768 submitted triangles, including degenerate pole triangles.\\
+Wing & Nine four-point sections forming a tapered blade profile; root/tip are not capped. & 36 vertices, 64 triangles per blade.\\
+Torus & 80 major-circle intervals, eight tube intervals, major radius 1, tube radius 0.025. & 729 vertices, 1,280 triangles.\\
+Eroded rock & Perturbed sphere-like sample grid, discarded zero-area triangles, per-face normals. & 182 nondegenerate triangles with independent face vertices.\\
+Terrain & $260\times260$ cells, two triangles per cell, finite-difference normals. & 68,121 vertices, 135,200 triangles.\\
+Particle quad & Unit square in local $XY$, oriented toward the camera. & Four vertices, two triangles per instance.\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Sphere and ellipsoid}
+For latitude $\theta\in[0,\pi]$ and longitude $\phi\in[0,2\pi]$,
+\begin{equation}
+\mathbf n=(\sin\theta\cos\phi,\cos\theta,\sin\theta\sin\phi),\qquad \mathbf p=0.5\mathbf n.
+\end{equation}
+The samples use $\theta=\pi i/16$, $\phi=2\pi j/24$ and UV $(j/24,i/16)$. Scaling a sphere by $(s_x,s_y,s_z)$ gives the ellipsoid
+\begin{equation}
+\frac{x^2}{(s_x/2)^2}+\frac{y^2}{(s_y/2)^2}+\frac{z^2}{(s_z/2)^2}=1.
+\end{equation}
+Ellipsoids create the aircraft hull/canopy, worker torso/helmet/visor, tank ends and worm wake. The equation describes each local unrotated instance; its model matrix then places and orients it in the scene.
+
+\subsubsection{Cylinder}
+For $\theta_i=2\pi i/24$, the two side rings are
+\begin{equation}
+\mathbf p_i^\pm=(0.5\cos\theta_i,\pm0.5,0.5\sin\theta_i),\qquad
+\mathbf n_i=(\cos\theta_i,0,\sin\theta_i).
+\end{equation}
+Caps use separate vertices and upward/downward normals for hard edges. Under nonuniform scale, the side satisfies
+\begin{equation}
+\frac{x^2}{(s_x/2)^2}+\frac{z^2}{(s_z/2)^2}=1,\qquad -s_y/2\le y\le s_y/2.
+\end{equation}
+The primitive is reused for tanks, engine pods, wheels, limbs, poles, pad and winch line. Objects called needles, stingers or separator funnels are still scaled cylinders, not separately generated cones or hollow pipes.
+
+\subsubsection{Torus and annular markers}
+For major angle $a$ and tube angle $b$,
+\begin{equation}
+\mathbf p(a,b)=((1+0.025\cos b)\cos a,\;0.025\sin b,\;(1+0.025\cos b)\sin a).
+\end{equation}
+This is a thin 3D ring tube, not a flat disc. The landing-pad ring scales horizontally by 11 and evacuation rings by 4.5. Its UV coordinates follow the two periodic angles.
+
+\subsubsection{Wing blade profile}
+At section $t=i/8$, chord $c=1-0.78t$ and thickness $q=0.08-0.065t$. Its four points are
+\begin{align}
+P_{\mathrm{lead}}&=(t,0,-0.45c),&P_{\mathrm{top}}&=(t,0.5q,-0.1c),\\
+P_{\mathrm{trail}}&=(t,0,0.55c),&P_{\mathrm{bottom}}&=(t,-0.5q,-0.1c).
+\end{align}
+Neighbouring sections are joined around the profile. Chord and thickness shrink toward the tip, producing a long, tapered mechanical blade. The normal directions are profile approximations, not exact analytical normals of a smooth airfoil.
+\source{src/arrakis.cpp:312--499,543--603}
+
+\subsection{Desert Height Field}
+\subsubsection{The current terrain equation}
+The terrain combines broad waves, folded ridges and smaller undulations:
+\begin{align}
+H_0(x,z)={}&28\sin(0.009x+0.004z)+19\cos(0.004x-0.012z)\notag\\
+&+5[1-|\sin(0.028x+0.016z)|]^2\notag\\
+&+1.8\sin(0.065x+0.038z)-4.
+\end{align}
+The first two terms produce large diagonal swells; the folded sine creates repeated sharper ridges; the final sine adds smaller shape variation. These are mathematical dunes, not a physical simulation of sand erosion or truly asymmetric windward/leeward dune formation.
+
+The base at $(55,55)$ is flattened by blending to $h_c=H_0(55,55)$. For $d=\sqrt{(x-55)^2+(z-55)^2}$,
+\begin{equation}
+b=1-\operatorname{smoothstep}(15,25,d),\qquad H(x,z)=(1-b)H_0(x,z)+bh_c.
+\end{equation}
+The inner radius 15 is flat, the exterior beyond radius 25 remains unchanged, and the intervening band transitions smoothly. In these equations, \code{smoothstep} maps its normalized interval with $3u^2-2u^3$, after clamping $u$ to $[0,1]$.
+
+\subsubsection{Sampling and normals}
+The current application creates a 900-by-900 patch with 260 cells in each direction:
+\begin{equation}
+x_i=-450+i\frac{900}{260},\qquad z_j=-450+j\frac{900}{260}.
+\end{equation}
+The spacing is about 3.462 units. Every grid cell becomes two triangles. Heights are sampled from $H$ and normals are computed by central finite differences with $\epsilon=0.4$:
+\begin{equation}
+\mathbf n=\operatorname{normalize}\left(
+-[H(x+\epsilon,z)-H(x-\epsilon,z)],\;2\epsilon,\;
+-[H(x,z+\epsilon)-H(x,z-\epsilon)]\right).
+\end{equation}
+This includes the flat-pad blend and gives smoother lighting than independent triangle face normals. UV coordinates are $(0.05x,0.05z)$, although visible sand patterns use world position instead of an imported texture.
+
+The terrain is static and finite, without streaming, adaptive tessellation or levels of detail. CPU height queries evaluate the continuous equation while the displayed surface interpolates triangle vertices. The current amplitudes 28/19 and grid 260 differ from older project comments/documentation.
+\source{src/arrakis.cpp:108--144,502--539,1789}
+
+\subsection{Ornithopter: Controllable Vehicle}
+The aircraft has 24 fixed primitive parts plus eight articulated wing meshes. A stretched sphere forms the main hull (scale $1.3,0.85,3.2$); another forms the dark canopy ($0.85,0.65,1.6$). Cylinders supply the nose, sensor needle, paired dorsal intakes, front/rear wing gimbals, twin turbine bodies, twin nozzles, two exhaust flames, two tail-boom segments and stinger. Cubes form the canopy spine, two V-tail fins and two landing skids.
+
+The four wings on each side attach at front/rear, upper/lower pivots. Each has a 5.2-unit signed span scale, a fixed sweep/dihedral and time-varying hinge/twist rotations. Negative scale mirrors the other side; face culling is disabled for the blades so both sides remain visible. Flap motion and boost changes are detailed in Section 3.
+
+Hull, dark mechanical parts, canopy, wings and nozzles have distinct diffuse/specular/shininess values. The canopy is glossy but opaque: it is not transparent or refractive glass. The visible exhaust is emissive cylinder geometry, not a fluid flame. There is no cockpit interior, pilot mesh, retracting landing gear or weapons subsystem.
+\source{src/arrakis.cpp:1049--1207,1527--1534}
+
+\subsection{Spice Harvester: Autonomous Machinery}
+The harvester is a 92-part primitive assembly. Its large main hopper ($9.5\times3.8\times6.2$) and upper refinery deck ($8.2\times1.2\times5$) give the industrial silhouette. Four track units sit at the front/back of each side; each contains a housing, four cylindrical wheels with decorative rotating bars, and ten separately animated track-pad cubes.
+
+Other components are the front cutter drum, side exit door, inclined ramp, emissive spice scoop, two side separators, raised bridge, glossy viewport, two emissive floodlight ornaments, twin exhaust stacks and bright vent rims. The drum and tracks rotate with travel. The root follows the route and terrain slope, then sinks and tilts during consumption.
+
+The separator shapes are straight capped cylinders rather than true funnel profiles. Floodlight ornaments glow visually but do not create spotlights illuminating surrounding sand. There are no separately modeled cutter teeth or dedicated black stack smoke; machinery dust comes from the shared particle system. The harvester is autonomous, not another player-controlled vehicle.
+\source{src/arrakis.cpp:1213--1313,1536--1555}
+
+\subsection{Spice Tanks}
+Three stationary tanks are initialized at $XZ=(-12,-26),(-19,-32),(-26,-23)$ with yaws $20^\circ,-15^\circ,10^\circ$. Each is drawn at the terrain height with uniform scale 1. They are not player-deployable objects.
+
+Each tank contains 16 parts: two skids, two cross supports, four inclined stanchions, one horizontal vessel cylinder, two overlapping ellipsoidal end heads, two reinforcing bands, a top hatch, an emissive valve and a vertical indicator strip. The vessel diameter is 2.2 and length is 3.2; its end ellipsoids have diameters $(2.2,2.2,1.3)$ and centres at local $z=\pm1.6$, $y=1.55$. One end satisfies
+\begin{equation}
+\frac{x^2}{1.1^2}+\frac{(y-1.55)^2}{1.1^2}+\frac{(z-z_c)^2}{0.65^2}=1.
+\end{equation}
+The exterior silhouette resembles a pressure vessel through overlap; no cut-hemisphere/cap boolean operation is used. The gauge/valve emission is constant, not pulsing or a simulated spice fill level. Tanks follow ground position but do not tilt to its normal, and disappear with the harvester attack phase.
+\source{src/arrakis_game.h:155--158; src/arrakis.cpp:1320--1382,1557--1567}
+
+\subsection{Rock Formations}
+Eight sites contain four differently scaled/rotated rock pieces each, for 32 rock-mesh instances. The sites are $(45,-65)$, $(-55,40)$, $(90,30)$, $(-90,-70)$, $(15,95)$, $(-25,-115)$, $(120,-25)$ and $(-130,85)$. Their roots use terrain height minus 0.5 and successive yaw offsets, reducing obvious repeated alignment.
+
+The rock mesh starts with latitude $a=\pi l/8$ and longitude $b=2\pi k/13$, then perturbs its horizontal radius:
+\begin{align}
+e(l,k)&=0.83+0.13\sin(7.1k+2.3l)+0.08\cos(5.4l),\\
+\mathbf p(l,k)&=\tfrac12(\sin a\cos b\,e,\cos a,\sin a\sin b\,e).
+\end{align}
+Each nondegenerate triangle gets an outward flat normal from its edge cross product. Light/dark strata materials add fragment-shader bands and grain. The perturbation is deterministic; it is not simulated erosion. Since the sample perturbation is index-dependent, the duplicated angular seam is not perfectly welded mathematically. Nearby rock sites also raise aircraft clearance, but there is no exact rock-mesh collision solver.
+\source{src/arrakis_game.h:38--39; src/arrakis.cpp:573--603,1388--1406,1569--1577}
+
+\subsection{Rescue Base, Markers, Workers and Winch}
+The base is a dark cylinder of diameter 24 and height 0.5, with a cyan radius-11 torus and two crossed strips. Four poles at radius 13 carry cyan lamp spheres. It is located at the flattened terrain centre $(55,55)$ and uses 12 primitive draws.
+
+Each active evacuation group has an amber radius-4.5 torus and a pole/lamp. The ring rotates from world up to the centre terrain normal using axis $(0,1,0)\times\mathbf n$ and angle $\arccos(n_y)$. It is slope-aligned, not deformed to the terrain around its entire circumference. Poles remain vertical. A group's marker disappears when no running/waiting members remain.
+
+A visible worker uses eight parts: torso ellipsoid, helmet/head ellipsoid, visor ellipsoid, two cylindrical arms, two cylindrical legs and a cyan locator sphere. The torso diameters are $(0.55,0.85,0.4)$ and head diameters $(0.43,0.46,0.43)$. Opposite arms/legs rotate to create running/idle motion. There is no skeletal rig, knee/elbow articulation or heading-oriented body root.
+
+The winch line is a thin cyan cylinder of diameter 0.055 between the aircraft and the lifted target. Its centre is the midpoint, its length is endpoint distance, and a rotation aligns local $Y$ with the line direction. It is straight rather than a simulated flexible cable. Gameplay conditions and scoring are detailed in Section 3.
+\source{src/arrakis.cpp:1427--1508}
+
+\subsection{Sandworm: Detailed Organic Object}
+The worm is not a single scaled cylinder. It combines a deformable ridged body, a shaped mouth lip, recessed funnel, deep throat and 1,000 individually curved teeth combined into one mesh. Five mesh draws represent 54,230 vertices and 99,704 submitted triangles; four additional sphere instances form its surface wake.
+
+\begin{tabularx}{\linewidth}{L{0.29\linewidth}Y r r}
+\toprule\textbf{Mesh}&\textbf{Sampling}&\textbf{Vertices}&\textbf{Triangles}\\\midrule
+Body & 192 length intervals, 96 angular intervals & 18,721 & 36,864\\
+Lip & Eight profile rings, 160 angular intervals & 1,288 & 2,240\\
+Funnel & Fourteen profile rings & 2,254 & 4,160\\
+Throat & Five profile rings plus bottom fan & 967 & 1,440\\
+Teeth & 1,000 five-sided curved teeth & 31,000 & 55,000\\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{Body centreline and surface}
+The neck bends in a local $YZ$ plane. For head $Q$, tilt $\tau$ and axis $U=(0,\cos\tau,\sin\tau)$, the lip join is $E=Q-1.4U$. At neck parameter $s\in[0,1]$,
+\begin{align}
+q&=\tfrac12\tau(1-s),\quad m=\tfrac12\tau(1+s),\quad L_s=64(1-s)\operatorname{sinc}(q),\\
+C_{\mathrm{neck}}(s)&=E-(0,L_s\cos m,L_s\sin m),
+\end{align}
+where $\operatorname{sinc}(q)=\sin(q)/q$ with the implemented small-positive-$q$ limit set to 1. The neck length is 64, and it becomes straight as tilt tends to zero.
+
+The buried body joins a point 140 units beneath local terrain to the neck using a cubic B\'ezier curve:
+\begin{equation}
+C_{\mathrm{buried}}(s)=(1-s)^3P_0+3(1-s)^2sP_1+3(1-s)s^2P_2+s^3P_3.
+\end{equation}
+$P_3=C_{\mathrm{neck}}(0)$, $P_0$ is the buried start, and control points $P_1=P_0+(0,b,0)$, $P_2=P_3-(0,b,0)$ use $b=(P_{3y}-P_{0y})/3$. The first 40\% of body parameter $t$ samples this buried curve; the remainder samples the neck.
+
+For tangent $T$, let $V=(0,-T_z,T_y)$ and radial direction $R(a)=(\cos a,0,0)+\sin a\,V$. Define taper $p=1-\operatorname{smoothstep}(0.85,1,t)$ and aperture $A$. The radial terms are
+\begin{align}
+r_{\mathrm{ridge}}&=0.70[0.5+0.5\cos(2\pi\,32t)]^3,\\
+r&=\operatorname{mix}(13.9+r_{\mathrm{ridge}},15A,1-p),\\
+g&=p[0.11\sin(13a+9t)+0.07\sin(29a-17t)],\\
+P(t,a)&=C(t)+(r+g)R(a).
+\end{align}
+The ridge term gives 32 body-ring cycles, grain breaks uniformity, and taper blends the body into the mouth aperture. Normals are recomputed from longitudinal/angular positional differences, so bending and ridges affect lighting. Updated vertices stream to the dynamic body VBO. Cached identical pose inputs prevent doing the deformation twice for shadow and colour passes.
+\source{src/arrakis_worm.h:197--255,274--279,303--315}
+
+\subsubsection{Lip, funnel and throat by surface revolution}
+For profile pair $(r_j,y_j)$ and angle $a$, a perturbed radius generates a ring:
+\begin{align}
+\rho_j(a)=r_j+R\sin\left(\frac{\pi j}{m-1}\right)
+\big[&0.55\sin(11a+0.7j)+0.30\sin(23a-0.9j)\notag\\
+&+0.15\sin(47a+1.1j)\big],\\
+P_j(a)&=(\rho_j\cos a,y_j,\rho_j\sin a).
+\end{align}
+$R$ is 0.16 for the lip, 0.08 for the funnel and zero for the throat. Small angular ripples produce an organic edge. Adjacent profile rings are joined by triangles, and shared normals are accumulated with the angular seam averaged.
+
+The exact profiles below list \emph{(radius, local axial coordinate)}. Negative axial coordinates recess into the mouth.
+\begin{lstlisting}
+Lip:
+(15.0,-1.4), (15.6,-0.9), (15.9,-0.2), (15.5,0.5),
+(14.8,0.8), (14.0,0.5), (13.4,-0.1), (13.1,-0.8)
+Funnel:
+(13.1,-0.8), (12.8,-1.3), (12.0,-2.0), (11.3,-2.6),
+(10.5,-3.5), (9.4,-4.5), (8.6,-5.4), (7.7,-6.3),
+(6.8,-7.3), (6.0,-8.2), (5.2,-9.2), (4.5,-10.1),
+(3.6,-11.4), (2.9,-13.0)
+Throat:
+(2.9,-13.0), (2.6,-15.0), (2.2,-19.0),
+(1.7,-24.0), (0.8,-27.0)
+\end{lstlisting}
+Only the deep throat bottom is closed with a radius-0.8 fan at axial coordinate -27; there is no disc across the mouth entrance. Darker interior materials strengthen the visible depth but do not replace the modeled cavity.
+\source{src/arrakis_worm.h:45--95,281--289}
+
+\subsubsection{Curved teeth}
+Six tooth rows use counts $(192,184,176,168,152,128)$, radii $(13.1,11.3,9.4,7.7,6.0,4.5)$ and axial depths $(-0.8,-2.6,-4.5,-6.3,-8.2,-10.1)$. Counts sum to 1,000.
+
+For tooth $k$ in row $j$, define $\sigma=17k+131j$, $v=0.5+0.5\sin(1.713\sigma)$ and
+\begin{equation}
+a=\frac{2\pi[k+0.37j+0.18\sin\sigma]}{\mathrm{count}_j}.
+\end{equation}
+Let $R_a=(\cos a,0,\sin a)$ and $S_a=(-\sin a,0,\cos a)$. With row radius $r_j$, depth $d_j$,
+\begin{align}
+\ell&=(r_j-1.8)(0.55+0.17v),&D&=2.1+1.1v,\\
+c&=0.20+0.30\sin(0.91\sigma),&w&=(0.075+0.035v)(1-0.06j).
+\end{align}
+The curved centreline is
+\begin{equation}
+P(t)=R_a(r_j-\ell t)+S_a(ct^2)+(0,d_j+0.65\sin\pi t-Dt^2,0).
+\end{equation}
+This points inward, bends sideways and drops into the mouth. Its tangent is the normalized derivative. A moving cross-section frame uses $B=\operatorname{normalize}(T\times S_a)$ and $N=B\times T$. At five angular sides $\beta=2\pi s/5$,
+\begin{equation}
+P_{\mathrm{surface}}=P(t)+w(1-t)^{0.85}[N\cos\beta+B\sin\beta].
+\end{equation}
+Six rings at $t=0,1/6,\ldots,5/6$ and one true apex at $t=1$ produce 31 vertices and 55 triangles per tooth. The attachment base is open. All teeth move with the head matrix; they do not individually flap or grow. Their moving-frame normals are approximations, appropriate for the small geometry.
+\source{src/arrakis_worm.h:99--159}
+
+\subsubsection{Rise, aiming, swallowing and retreat}
+For attack time $a$, define rise $r=\operatorname{smoothstep}(0,6,a)$, lunge $l=\operatorname{smoothstep}(6,12,a)$ and retreat $e=\operatorname{smoothstep}(13.5,18,a)$. Before breach, head height is $10+4\operatorname{smoothstep}(0,1,\mathrm{progress})$ above terrain. During attack it becomes
+\begin{equation}
+h=14+22r-27l+0.25\sin(1.6t)r(1-l),
+\end{equation}
+then blends toward -24 with $e$. Forward reach is $12l(1-e)$. A terrain sample 18 units toward the heading defines target height $y_T$ and aim angle $\operatorname{atan2}(18-\mathrm{reach},y_T-y_{\mathrm{head}})$. Tilt is $70^\circ(1-r)+\mathrm{aim}\,l(1-e)$, with the first term converted to radians. Aperture becomes
+\begin{equation}
+A=1-0.18\operatorname{smoothstep}(12,13.5,a)(1-e).
+\end{equation}
+The head parts share $T(Q)R_x(\tau)S(A,1,A)$; a heading rotation places the local bend toward the harvester. The body deforms to match. This is authored parametric animation, not a skeletal or physics-driven creature.
+
+Four sand-coloured ellipsoids behind the worm form the wake. Their fade is $w=1-\operatorname{smoothstep}(0,6,a)$ and their scales are $((12-i)w,[3+0.35\sin(2t-i)]w,10w)$. They are partly embedded in terrain and fade as the worm rises. Their movement is separate from the dust emitters and terrain-collapse effect.
+\source{src/arrakis_worm.h:168--195,294--356}

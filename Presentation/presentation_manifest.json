@@ -1,0 +1,2343 @@
+{
+  "slide_count": 10,
+  "aspect_ratio": "16:9",
+  "source_sha256": {
+    "src/arrakis.cpp": "e5c06c70a218253003c3bcc84f680f2f3e79212fe0a7f1734d2626d8b36a84e4",
+    "src/arrakis_game.h": "32ef017c5ec9f25fc60a5967d95a37ceef618224237eeeaf751d0c6e9edcf71b",
+    "src/arrakis_worm.h": "09496272eb925afbfe2290398fbde90f6eec632f21defaa20b755c80701c6f04",
+    "src/arrakis_hud.h": "2bb9f101426b22f56f37b7a426eff93020e6fb60d3ea2dd61fcb1bc92dd1ee31",
+    "src/arrakis_audio.h": "aec39668979caaef357e93dfe8db1ca9a2eafeb2ab3e44c4c7225dc61e53a4d5"
+  },
+  "video_embedded": false,
+  "slides": [
+    {
+      "number": 1,
+      "title": "Introduction",
+      "texts": [
+        "01 / INTRODUCTION",
+        "ARRAKIS",
+        "HARVESTER DOWN",
+        "Fly an ornithopter. Rescue the crew.\nEscape a pursuing sandworm.",
+        "Asique Ehetasamul Haque",
+        "Roll: 2107096  |  Year: 4th  |  Semester: 1st  |  Group: B2",
+        "CSE - 4102\nComputer Graphics and Image Processing Laboratory",
+        "Department of Computer Science and Engineering\nKhulna University of Engineering and Technology",
+        "C++17 + OpenGL 3.3\nProcedural models, mathematical motion, game-like controls",
+        "36 crew   /   8 seats"
+      ],
+      "images": [
+        "breach.png"
+      ],
+      "boxes": [
+        {
+          "kind": "image",
+          "x": 760,
+          "y": 0,
+          "width": 840,
+          "height": 900
+        },
+        {
+          "kind": "shape",
+          "x": 0,
+          "y": 0,
+          "width": 805,
+          "height": 900
+        },
+        {
+          "kind": "shape",
+          "x": 802,
+          "y": 0,
+          "width": 5,
+          "height": 900
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 45,
+          "width": 680,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 103,
+          "width": 710,
+          "height": 140
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 230,
+          "width": 710,
+          "height": 60
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 315,
+          "width": 680,
+          "height": 89
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 449,
+          "width": 695,
+          "height": 50
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 505,
+          "width": 700,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 563,
+          "width": 710,
+          "height": 78
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 665,
+          "width": 700,
+          "height": 80
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 812,
+          "width": 715,
+          "height": 59
+        },
+        {
+          "kind": "shape",
+          "x": 965,
+          "y": 740,
+          "width": 515,
+          "height": 90
+        },
+        {
+          "kind": "text",
+          "x": 990,
+          "y": 755,
+          "width": 475,
+          "height": 50
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Outline",
+      "texts": [
+        "PRESENTATION ROADMAP",
+        "Outline",
+        "A world, its equations, the player's actions, and the frame that explains them.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "02 / 10",
+        "01",
+        "Build the world",
+        "Objects and screenshots; procedural curved surfaces",
+        "Slides 3-5",
+        "02",
+        "Bring it to life",
+        "Flight, machinery, workers, pursuit and attack",
+        "Slide 6",
+        "03",
+        "Give the player control",
+        "Keyboard + mouse, three cameras, winch and delivery",
+        "Slide 7",
+        "04",
+        "Explain the result",
+        "Rendering, feedback, audio and verification",
+        "Slides 8-9",
+        "THE RESCUE LOOP",
+        "36 workers",
+        "Leave the moving harvester",
+        "8-seat cabin",
+        "Hover and winch in small loads",
+        "Cyan base",
+        "Deliver: only then does score increase",
+        "Threat + outcome",
+        "Breach, extraction, debrief and retry",
+        "SOURCE + AUDIO  >  GENERATED MESHES  >  INPUT / SIMULATION  >  CAMERA / AUDIO  >  GPU FRAME"
+      ],
+      "images": [],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 215,
+          "width": 72,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 217,
+          "width": 600,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 262,
+          "width": 615,
+          "height": 44
+        },
+        {
+          "kind": "text",
+          "x": 680,
+          "y": 220,
+          "width": 140,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 340,
+          "width": 72,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 342,
+          "width": 600,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 387,
+          "width": 615,
+          "height": 44
+        },
+        {
+          "kind": "text",
+          "x": 680,
+          "y": 345,
+          "width": 140,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 465,
+          "width": 72,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 467,
+          "width": 600,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 512,
+          "width": 615,
+          "height": 44
+        },
+        {
+          "kind": "text",
+          "x": 680,
+          "y": 470,
+          "width": 140,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 590,
+          "width": 72,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 592,
+          "width": 600,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 160,
+          "y": 637,
+          "width": 615,
+          "height": 44
+        },
+        {
+          "kind": "text",
+          "x": 680,
+          "y": 595,
+          "width": 140,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 925,
+          "y": 212,
+          "width": 570,
+          "height": 42
+        },
+        {
+          "kind": "shape",
+          "x": 925,
+          "y": 278,
+          "width": 575,
+          "height": 80
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 286,
+          "width": 520,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 327,
+          "width": 535,
+          "height": 28
+        },
+        {
+          "kind": "shape",
+          "x": 925,
+          "y": 383,
+          "width": 575,
+          "height": 80
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 391,
+          "width": 520,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 432,
+          "width": 535,
+          "height": 28
+        },
+        {
+          "kind": "shape",
+          "x": 925,
+          "y": 488,
+          "width": 575,
+          "height": 80
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 496,
+          "width": 520,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 537,
+          "width": 535,
+          "height": 28
+        },
+        {
+          "kind": "shape",
+          "x": 925,
+          "y": 593,
+          "width": 575,
+          "height": 80
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 601,
+          "width": 520,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 945,
+          "y": 642,
+          "width": 535,
+          "height": 28
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Objects I / Desert and machines",
+      "texts": [
+        "OBJECTS / 1 OF 2",
+        "Objects I / Desert and machines",
+        "Every visible model is generated in code, assembled from indexed meshes, and shaded in real time.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "03 / 10",
+        "01 / DUNE TERRAIN",
+        "900 x 900 patch; 260 x 260 cells.\nHeight field, smooth normals, flat base terrace.",
+        "02 / ORNITHOPTER",
+        "Eight wings; hull/canopy, intakes, gimbals,\nturbines/nozzles, tail, sensor and fixed skids.",
+        "03 / SPICE HARVESTER",
+        "Four crawlers, wheels/pads, cutter drum,\nexit/ramp, separators, bridge, stacks and lamps.",
+        "04 / THREE SPICE TANKS",
+        "Cradle/skids, cylinder vessel, domed ends,\nbands, hatch/valve and emissive indicator.",
+        "05 / ROCK FORMATIONS",
+        "Eight sites x four pieces: irregular facets,\ndifferent scales, strata and procedural grain.",
+        "HOW THEY ARE ASSEMBLED",
+        "Cube + cylinder + ellipsoid + wing mesh.\nParent/local transforms reuse GPU geometry.",
+        "Inspection close-ups reuse actual project draw routines. Terrain is a scene capture. No imported models or image textures."
+      ],
+      "images": [
+        "camera_0.png",
+        "aircraft_crop.png",
+        "harvester_crop.png",
+        "tank_crop.png",
+        "rocks_crop.png",
+        "aircraft_wire_crop.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 209,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 254,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 440,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 209,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 565,
+          "y": 254,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 440,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 209,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 1070,
+          "y": 254,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 440,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 512,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 557,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 743,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 512,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 565,
+          "y": 557,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 743,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 512,
+          "width": 470,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 1070,
+          "y": 557,
+          "width": 470,
+          "height": 178
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 743,
+          "width": 480,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 825,
+          "width": 1460,
+          "height": 23
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Objects II / Rescue and sandworm",
+      "texts": [
+        "OBJECTS / 2 OF 2",
+        "Objects II / Rescue and sandworm",
+        "The mission uses visible people, colour-coded markers, a winch line, and a genuinely recessed worm mouth.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "04 / 10",
+        "A modeled cavity, not a black disc.\nBody + lip + funnel + deep throat + teeth",
+        "5 meshes  |  1,000 curved teeth  |  32 body ridge cycles",
+        "WORKER",
+        "Torso, helmet/visor, limbs, locator",
+        "SAFE BASE",
+        "Pad, cyan ring/cross, four lights",
+        "AMBER BEACON",
+        "Slope-aligned ring, pole and lamp",
+        "WINCH + LIFT",
+        "Cable + progress-based lift",
+        "AMBER: awaiting rescue   |   CYAN: base / winch   |   WORM WAKE: four sand mounds + disturbed dust"
+      ],
+      "images": [
+        "mouth.png",
+        "worker_crop.png",
+        "base_crop.png",
+        "beacon_crop.png",
+        "winch_crop.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 208,
+          "width": 755,
+          "height": 424
+        },
+        {
+          "kind": "text",
+          "x": 80,
+          "y": 647,
+          "width": 725,
+          "height": 82
+        },
+        {
+          "kind": "text",
+          "x": 80,
+          "y": 733,
+          "width": 740,
+          "height": 48
+        },
+        {
+          "kind": "text",
+          "x": 850,
+          "y": 208,
+          "width": 325,
+          "height": 28
+        },
+        {
+          "kind": "image",
+          "x": 850,
+          "y": 245,
+          "width": 325,
+          "height": 180
+        },
+        {
+          "kind": "text",
+          "x": 850,
+          "y": 433,
+          "width": 326,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 1195,
+          "y": 208,
+          "width": 325,
+          "height": 28
+        },
+        {
+          "kind": "image",
+          "x": 1195,
+          "y": 245,
+          "width": 325,
+          "height": 180
+        },
+        {
+          "kind": "text",
+          "x": 1195,
+          "y": 433,
+          "width": 326,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 850,
+          "y": 488,
+          "width": 325,
+          "height": 28
+        },
+        {
+          "kind": "image",
+          "x": 850,
+          "y": 525,
+          "width": 325,
+          "height": 180
+        },
+        {
+          "kind": "text",
+          "x": 850,
+          "y": 713,
+          "width": 326,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 1195,
+          "y": 488,
+          "width": 325,
+          "height": 28
+        },
+        {
+          "kind": "image",
+          "x": 1195,
+          "y": 525,
+          "width": 325,
+          "height": 180
+        },
+        {
+          "kind": "text",
+          "x": 1195,
+          "y": 713,
+          "width": 326,
+          "height": 45
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Curved geometry / The equations behind the objects",
+      "texts": [
+        "GEOMETRY AND MATHEMATICAL DESIGN",
+        "Curved geometry / The equations behind the objects",
+        "Parameters control shape; triangles sample the equations; normals control lighting.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "05 / 10",
+        "DUNES / a multi-frequency height field",
+        "Broad dunes + sharper ridges + small undulations.\nBase flattening: smooth blend from radius 15 to 25.",
+        "ELLIPSOIDS / CYLINDERS / RINGS",
+        "A/B/C: half-axis lengths; cylinder: unit height, radius 0.5.",
+        "Torus a/b: major-circle / tube angles; radii 1 and 0.025.",
+        "WORM BODY / bend a radial surface",
+        "C(t): buried cubic Bezier + curved 64-unit neck.\nt: along body; a: ring angle; T: centreline tangent.\nrho: radius + 32 ridges/grain + mouth taper.\nProfile revolution creates lip, funnel and throat.",
+        "TEETH / a curved, tapered centreline",
+        "R/S: radial/tangential; r/d: row radius/depth.\nl: reach; c: curl; D: drop; w: base width; t: base -> tip.",
+        "A readable equation-to-object mapping: dunes, hull/tank/worker curves, beacon rings, flexible worm and curved teeth."
+      ],
+      "images": [
+        "eq_terrain1.png",
+        "eq_terrain2.png",
+        "eq_terrain3.png",
+        "eq_ellipsoid.png",
+        "eq_cylinder.png",
+        "eq_torus.png",
+        "eq_torus2.png",
+        "eq_body.png",
+        "eq_tooth1.png",
+        "eq_tooth2.png",
+        "eq_tooth3.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 209,
+          "width": 735,
+          "height": 37
+        },
+        {
+          "kind": "image",
+          "x": 65,
+          "y": 260,
+          "width": 730,
+          "height": 47
+        },
+        {
+          "kind": "image",
+          "x": 65,
+          "y": 313,
+          "width": 730,
+          "height": 45
+        },
+        {
+          "kind": "image",
+          "x": 65,
+          "y": 365,
+          "width": 730,
+          "height": 44
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 425,
+          "width": 728,
+          "height": 64
+        },
+        {
+          "kind": "text",
+          "x": 865,
+          "y": 209,
+          "width": 655,
+          "height": 37
+        },
+        {
+          "kind": "image",
+          "x": 880,
+          "y": 258,
+          "width": 625,
+          "height": 63
+        },
+        {
+          "kind": "text",
+          "x": 880,
+          "y": 322,
+          "width": 635,
+          "height": 25
+        },
+        {
+          "kind": "image",
+          "x": 880,
+          "y": 350,
+          "width": 625,
+          "height": 36
+        },
+        {
+          "kind": "image",
+          "x": 865,
+          "y": 394,
+          "width": 652,
+          "height": 35
+        },
+        {
+          "kind": "image",
+          "x": 925,
+          "y": 436,
+          "width": 588,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 870,
+          "y": 473,
+          "width": 640,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 525,
+          "width": 730,
+          "height": 37
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 581,
+          "width": 742,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 655,
+          "width": 735,
+          "height": 131
+        },
+        {
+          "kind": "text",
+          "x": 865,
+          "y": 525,
+          "width": 650,
+          "height": 37
+        },
+        {
+          "kind": "image",
+          "x": 870,
+          "y": 581,
+          "width": 630,
+          "height": 45
+        },
+        {
+          "kind": "image",
+          "x": 870,
+          "y": 628,
+          "width": 630,
+          "height": 43
+        },
+        {
+          "kind": "image",
+          "x": 870,
+          "y": 682,
+          "width": 630,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 865,
+          "y": 737,
+          "width": 650,
+          "height": 56
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Complex motion / One changing rescue scene",
+      "texts": [
+        "DYNAMIC OBJECTS AND DYNAMIC SCENES",
+        "Complex motion / One changing rescue scene",
+        "Objects move independently, while mission events change what the player can rescue and what remains visible.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "06 / 10",
+        "APPROACH",
+        "Wake + closing gap",
+        "RISE",
+        "0-6 s after breach",
+        "ATTACK / SWALLOW",
+        "6-12 s: lunge + sink",
+        "RETREAT",
+        "13.5-18 s: withdraw",
+        "FLIGHT + ARTICULATION",
+        "k = 5.5 normal / 12 braking; speeds 28 / 48 units/s.\nTerrain following + pitch/bank; analytically smoothed yaw.\nWing angles in degrees; phase 23 -> 36 rad/s; twist/exhaust.\nTracks/drum follow distance travelled, not idle clock time.",
+        "AUTONOMOUS ROUTE + EVACUATION",
+        "t: seconds; tangent heading and slope alignment.\nGroups release at 6 + 7j s; crew run at 3.8 units/s.\nWorm gap: 220 -> 18; limbs animate; radius/height hazards.\nCurrent breach: 150 s; then 60 s final extraction.",
+        "TITLE  >  FLIGHT / EVACUATION  >  BREACH / HARVESTER LOSS  >  EXTRACTION  >  DEBRIEF / RETRY / NEXT"
+      ],
+      "images": [
+        "worm_approach.png",
+        "worm_rise.png",
+        "worm_attack.png",
+        "worm_retreat.png",
+        "eq_velocity.png",
+        "eq_wing.png",
+        "eq_route1.png",
+        "eq_route2.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 207,
+          "width": 350,
+          "height": 31
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 246,
+          "width": 350,
+          "height": 185
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 442,
+          "width": 350,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 435,
+          "y": 207,
+          "width": 350,
+          "height": 31
+        },
+        {
+          "kind": "image",
+          "x": 435,
+          "y": 246,
+          "width": 350,
+          "height": 185
+        },
+        {
+          "kind": "text",
+          "x": 435,
+          "y": 442,
+          "width": 350,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 810,
+          "y": 207,
+          "width": 350,
+          "height": 31
+        },
+        {
+          "kind": "image",
+          "x": 810,
+          "y": 246,
+          "width": 350,
+          "height": 185
+        },
+        {
+          "kind": "text",
+          "x": 810,
+          "y": 442,
+          "width": 350,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 1185,
+          "y": 207,
+          "width": 350,
+          "height": 31
+        },
+        {
+          "kind": "image",
+          "x": 1185,
+          "y": 246,
+          "width": 350,
+          "height": 185
+        },
+        {
+          "kind": "text",
+          "x": 1185,
+          "y": 442,
+          "width": 350,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 509,
+          "width": 705,
+          "height": 32
+        },
+        {
+          "kind": "image",
+          "x": 62,
+          "y": 553,
+          "width": 708,
+          "height": 45
+        },
+        {
+          "kind": "image",
+          "x": 62,
+          "y": 607,
+          "width": 708,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 664,
+          "width": 715,
+          "height": 123
+        },
+        {
+          "kind": "text",
+          "x": 840,
+          "y": 509,
+          "width": 690,
+          "height": 32
+        },
+        {
+          "kind": "image",
+          "x": 840,
+          "y": 553,
+          "width": 682,
+          "height": 40
+        },
+        {
+          "kind": "image",
+          "x": 840,
+          "y": 602,
+          "width": 682,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 657,
+          "width": 681,
+          "height": 126
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Game-like controls / Fly, inspect, rescue",
+      "texts": [
+        "CONTROLLABILITY AND CAMERA MOVEMENT",
+        "Game-like controls / Fly, inspect, rescue",
+        "The aircraft and the mission respond to input; changing view does not change the aircraft's heading.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "07 / 10",
+        "FLIGHT INPUT",
+        "W / S",
+        "Forward / reverse thrust",
+        "A / D",
+        "Strafe without turning the nose",
+        "Q / E",
+        "Raise / lower terrain-following altitude",
+        "MOUSE",
+        "Hover steers yaw + camera pitch; centre dead zone",
+        "ARROWS",
+        "Left/right turn; up/down camera elevation",
+        "SHIFT",
+        "Rechargeable boost; release after depletion",
+        "SPACE",
+        "Brake + descend + winch / unload",
+        "Safety: altitude 4-55; rock/harvester clearance help.\nFocus loss pauses and clears held input; reset/resize\nrecentres the cursor. Movement stays inside +/-160.",
+        "C / THREE HEADING-FOLLOWING VIEWS",
+        "WIDE / 40",
+        "CLOSE / 20",
+        "TACTICAL / 100 UP",
+        "Smooth follow + terrain-safe eye; 58-degree perspective.\nAll are third-person, including the close preset.",
+        "SPACE / RESCUE IS A STATE CHANGE",
+        "Pickup: distance <12, height <=11, speed <6.\nHold 0.42 s/person; cabin capacity = 8.\nDeliver: base distance <14; hold 1.2 s per load.",
+        "Inside -> Running/Waiting -> Aboard -> Safe\nOnly Safe increases score; danger/timeout can cause Lost.",
+        "ENTER start/next   |   P pause   |   R retry   |   M mute   |   F wireframe   |   F11 fullscreen   |   ESC exit"
+      ],
+      "images": [
+        "camera_0.png",
+        "camera_1.png",
+        "camera_2.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 207,
+          "width": 700,
+          "height": 35
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 263,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 271,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 271,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 321,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 329,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 329,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 379,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 387,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 387,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 437,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 445,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 445,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 495,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 503,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 503,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 553,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 561,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 561,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 611,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 70,
+          "y": 619,
+          "width": 114,
+          "height": 27
+        },
+        {
+          "kind": "text",
+          "x": 210,
+          "y": 619,
+          "width": 590,
+          "height": 43
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 701,
+          "width": 737,
+          "height": 88
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 207,
+          "width": 680,
+          "height": 35
+        },
+        {
+          "kind": "image",
+          "x": 845,
+          "y": 260,
+          "width": 216,
+          "height": 139
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 410,
+          "width": 220,
+          "height": 32
+        },
+        {
+          "kind": "image",
+          "x": 1079,
+          "y": 260,
+          "width": 216,
+          "height": 139
+        },
+        {
+          "kind": "text",
+          "x": 1079,
+          "y": 410,
+          "width": 220,
+          "height": 32
+        },
+        {
+          "kind": "image",
+          "x": 1313,
+          "y": 260,
+          "width": 216,
+          "height": 139
+        },
+        {
+          "kind": "text",
+          "x": 1313,
+          "y": 410,
+          "width": 220,
+          "height": 32
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 454,
+          "width": 680,
+          "height": 54
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 540,
+          "width": 681,
+          "height": 38
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 591,
+          "width": 680,
+          "height": 100
+        },
+        {
+          "kind": "text",
+          "x": 845,
+          "y": 704,
+          "width": 680,
+          "height": 61
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Rendering / What makes the scene convincing",
+      "texts": [
+        "ADDITIONAL GRAPHICS FEATURES",
+        "Rendering / What makes the scene convincing",
+        "A forward OpenGL renderer: one shadow target, then the visible frame, particles, and the interface.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "08 / 10",
+        "01 / SHADOW DEPTH",
+        "2048 x 2048 depth map",
+        "02 / SKY + SUN",
+        "Generated sky view rays",
+        "03 / LIT OBJECTS",
+        "Materials + shadows + fog",
+        "04 / DUST",
+        "Sorted alpha billboards",
+        "05 / HUD",
+        "Screen-space triangles",
+        "SHADOWS + MATERIALS",
+        "Directional Blinn-Phong + sand-wrap diffuse.\n5 x 5 PCF; receiver-plane correction + bias.\nGlossy opaque surfaces; emissive ornaments.",
+        "PROCEDURAL SURFACE DETAIL",
+        "Sand ripples, bump-like normals and sparkle.\nRock strata/grain; no bitmap texture files.\nSky gradient, sun disc/halo, distance fog, tone mapping.",
+        "DUST + COLLAPSING TERRAIN",
+        "BREACH DUST",
+        "GPU DEPRESSION",
+        "2,400 particles: wind/crawler/worm/downwash.\nSorted instances + lifetime/alpha fades.\nDepth-tested, camera-facing billboards.\nCrater: 13 units deep, tapers to radius 48.",
+        "Depth/culling + requested 4x MSAA; inverse-transpose normals. Crater is GPU-only: CPU ground/collision height is unchanged.",
+        "DEMO: inspect long shadows + surface detail; press F for triangle topology; show breach dust and the visual depression."
+      ],
+      "images": [
+        "shadow_detail_crop.png",
+        "rocks_crop.png",
+        "dust_detail_crop.png",
+        "crater.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 213,
+          "width": 276,
+          "height": 95
+        },
+        {
+          "kind": "text",
+          "x": 73,
+          "y": 225,
+          "width": 253,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 73,
+          "y": 264,
+          "width": 255,
+          "height": 34
+        },
+        {
+          "kind": "shape",
+          "x": 360,
+          "y": 213,
+          "width": 276,
+          "height": 95
+        },
+        {
+          "kind": "text",
+          "x": 373,
+          "y": 225,
+          "width": 253,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 373,
+          "y": 264,
+          "width": 255,
+          "height": 34
+        },
+        {
+          "kind": "shape",
+          "x": 660,
+          "y": 213,
+          "width": 276,
+          "height": 95
+        },
+        {
+          "kind": "text",
+          "x": 673,
+          "y": 225,
+          "width": 253,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 673,
+          "y": 264,
+          "width": 255,
+          "height": 34
+        },
+        {
+          "kind": "shape",
+          "x": 960,
+          "y": 213,
+          "width": 276,
+          "height": 95
+        },
+        {
+          "kind": "text",
+          "x": 973,
+          "y": 225,
+          "width": 253,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 973,
+          "y": 264,
+          "width": 255,
+          "height": 34
+        },
+        {
+          "kind": "shape",
+          "x": 1260,
+          "y": 213,
+          "width": 276,
+          "height": 95
+        },
+        {
+          "kind": "text",
+          "x": 1273,
+          "y": 225,
+          "width": 253,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 1273,
+          "y": 264,
+          "width": 255,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 342,
+          "width": 480,
+          "height": 34
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 391,
+          "width": 474,
+          "height": 211
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 620,
+          "width": 480,
+          "height": 125
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 342,
+          "width": 480,
+          "height": 34
+        },
+        {
+          "kind": "image",
+          "x": 565,
+          "y": 391,
+          "width": 474,
+          "height": 211
+        },
+        {
+          "kind": "text",
+          "x": 565,
+          "y": 620,
+          "width": 480,
+          "height": 125
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 342,
+          "width": 480,
+          "height": 34
+        },
+        {
+          "kind": "image",
+          "x": 1070,
+          "y": 391,
+          "width": 232,
+          "height": 211
+        },
+        {
+          "kind": "image",
+          "x": 1312,
+          "y": 391,
+          "width": 232,
+          "height": 211
+        },
+        {
+          "kind": "shape",
+          "x": 1070,
+          "y": 573,
+          "width": 232,
+          "height": 29
+        },
+        {
+          "kind": "shape",
+          "x": 1312,
+          "y": 573,
+          "width": 232,
+          "height": 29
+        },
+        {
+          "kind": "text",
+          "x": 1078,
+          "y": 579,
+          "width": 211,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1320,
+          "y": 579,
+          "width": 215,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1070,
+          "y": 620,
+          "width": 480,
+          "height": 125
+        },
+        {
+          "kind": "text",
+          "x": 63,
+          "y": 758,
+          "width": 1470,
+          "height": 32
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 1480,
+          "height": 40
+        },
+        {
+          "kind": "shape",
+          "x": 60,
+          "y": 798,
+          "width": 4,
+          "height": 40
+        },
+        {
+          "kind": "text",
+          "x": 76,
+          "y": 806,
+          "width": 1455,
+          "height": 26
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Feedback / The player can read and hear the mission",
+      "texts": [
+        "ADDITIONAL INTERFACE, AUDIO AND ENGINEERING FEATURES",
+        "Feedback / The player can read and hear the mission",
+        "Custom HUD, spatial sound, runtime safeguards, and reproducible build/testing tools.",
+        "ARRAKIS / HARVESTER DOWN     |     ASIQUE EHETASAMUL HAQUE     |     CSE 4102",
+        "09 / 10",
+        "INSTRUMENTATION / 5 x 7 BITMAP FONT",
+        "Crew / cabin / score / wave; breach or extraction timer; seat and progress bars.",
+        "Altitude, speed, FPS, boost, threat gap.\nNorth-up radar: cyan aircraft/base; amber crew;\nwhite harvester; red worm; world range +/-300.\nAdaptive layout and camera guide brackets.",
+        "Context prompts; title/pause/debrief panels; delivery-only score; session best.",
+        "8 SPATIAL SOUND EFFECTS",
+        "Loops: flight / boost / harvester / worm rumble.\nEvents: breach / winch / safe delivery / crew help.\nCamera listener; distance attenuation; speed pitch;\nboost/threat volume; mute and pause silencing.",
+        "Silent fallback; focus pause and cursor recentering.\nFullscreen/resize; minimized waiting; substeps.",
+        "ENGINEERING + CURRENT VERIFICATION",
+        "C++17 / GLFW / GLAD / GLM / miniaudio.\nCMake + Visual Studio; audio copied post-build.\nProcedural startup meshes and embedded GLSL.\nReport PDF + source documentation/manifest tooling.",
+        "4 / 4 graphical smoke modes passed",
+        "23 / 27 mission cases; 1,057 checks",
+        "Current timer is 150 s; five assertions fail because\ntests expect 210-to-150 progression. Source untouched."
+      ],
+      "images": [
+        "status_crop.png",
+        "telemetry_crop.png",
+        "radar_crop.png",
+        "action_crop.png"
+      ],
+      "boxes": [
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 35,
+          "width": 1370,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 76,
+          "width": 1460,
+          "height": 65
+        },
+        {
+          "kind": "text",
+          "x": 62,
+          "y": 144,
+          "width": 1470,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 864,
+          "width": 1240,
+          "height": 24
+        },
+        {
+          "kind": "text",
+          "x": 1440,
+          "y": 860,
+          "width": 100,
+          "height": 30
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 209,
+          "width": 845,
+          "height": 37
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 259,
+          "width": 845,
+          "height": 86
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 358,
+          "width": 850,
+          "height": 41
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 416,
+          "width": 300,
+          "height": 171
+        },
+        {
+          "kind": "image",
+          "x": 610,
+          "y": 417,
+          "width": 236,
+          "height": 294
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 603,
+          "width": 496,
+          "height": 120
+        },
+        {
+          "kind": "image",
+          "x": 60,
+          "y": 733,
+          "width": 845,
+          "height": 69
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 809,
+          "width": 850,
+          "height": 34
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 210,
+          "width": 555,
+          "height": 35
+        },
+        {
+          "kind": "text",
+          "x": 982,
+          "y": 264,
+          "width": 553,
+          "height": 118
+        },
+        {
+          "kind": "text",
+          "x": 982,
+          "y": 387,
+          "width": 555,
+          "height": 67
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 488,
+          "width": 555,
+          "height": 36
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 542,
+          "width": 555,
+          "height": 120
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 669,
+          "width": 550,
+          "height": 41
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 721,
+          "width": 550,
+          "height": 42
+        },
+        {
+          "kind": "text",
+          "x": 980,
+          "y": 774,
+          "width": 554,
+          "height": 63
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Thank You",
+      "texts": [
+        "10 / CLOSING REMARKS",
+        "THANK YOU",
+        "Procedural geometry. Mathematical motion. A controllable rescue mission.",
+        "Asique Ehetasamul Haque  |  Roll 2107096  |  CSE - 4102  |  Year 4th, Semester 1st, Group B2",
+        "Objects, curved equations, dynamic scenes, cameras, interaction, shadows, surface detail, dust, HUD and sound.",
+        "Project report available. Your completed demonstration video is separate; no video is embedded in this deck.\nLimits: arcade physics; opaque glass; GPU-only crater. 'Karpov objects' is undefined and is not claimed."
+      ],
+      "images": [
+        "pursuit.png"
+      ],
+      "boxes": [
+        {
+          "kind": "image",
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "kind": "shape",
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 270
+        },
+        {
+          "kind": "shape",
+          "x": 0,
+          "y": 565,
+          "width": 1600,
+          "height": 335
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 44,
+          "width": 1480,
+          "height": 31
+        },
+        {
+          "kind": "text",
+          "x": 60,
+          "y": 109,
+          "width": 1460,
+          "height": 126
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 590,
+          "width": 1470,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 668,
+          "width": 1440,
+          "height": 55
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 745,
+          "width": 1420,
+          "height": 45
+        },
+        {
+          "kind": "text",
+          "x": 65,
+          "y": 811,
+          "width": 1450,
+          "height": 52
+        }
+      ]
+    }
+  ],
+  "feature_coverage": {
+    "Project title and desert rescue objective": 1,
+    "Author Asique Ehetasamul Haque and roll 2107096": 1,
+    "Year 4 Semester 1 Group B2 Department of CSE KUET": 1,
+    "CSE 4102 Computer Graphics and Image Processing Laboratory": 1,
+    "C++17 and OpenGL 3.3 core": 1,
+    "36-worker rescue mission and eight-seat aircraft": 1,
+    "Original generated models and procedural visual appearance": 1,
+    "Presentation outline": 2,
+    "Fly pickup return unload repeat rescue loop": 2,
+    "Source module responsibilities": 2,
+    "CPU input state camera audio and GPU frame pipeline": 2,
+    "VAO VBO EBO indexed mesh upload": 2,
+    "Model view projection and light-space transforms": 2,
+    "Desert terrain object and 260-by-260 grid over 900 units": 3,
+    "Ornithopter fuselage nose sensor and opaque canopy": 3,
+    "Ornithopter intake cowls and wing gimbals": 3,
+    "Eight tapered aerofoil wing blades": 3,
+    "Twin turbines nozzles and emissive exhaust": 3,
+    "Aircraft tail boom V-tail and landing skids": 3,
+    "Harvester hopper and upper refinery decks": 3,
+    "Four harvester track units road wheels and tread pads": 3,
+    "Harvester cutter drum and spice intake scoop": 3,
+    "Harvester crew exit door and ramp": 3,
+    "Harvester separator funnels bridge and opaque viewports": 3,
+    "Harvester emissive lamps stacks and vent rims": 3,
+    "Three fixed spice pressure tanks": 3,
+    "Tank rounded heads cylinder bands hatch and relief valve": 3,
+    "Tank transport cradle skid beams and inclined supports": 3,
+    "Constant emissive spice sight tubes": 3,
+    "Eight rock sites with four eroded pieces each": 3,
+    "Parent-relative reusable primitive assembly": 3,
+    "Generated cube cylinder sphere wing and eroded-rock meshes": 3,
+    "Faceted rock normals and separate cylinder-cap normals": 3,
+    "Actual draw-routine isolated model contact sheets": 3,
+    "Sandworm five-mesh object assembly": 4,
+    "Ridged deformable worm body": 4,
+    "Irregular worm lip inward funnel and recessed throat": 4,
+    "Six tooth rows totaling 1000 curved pointed teeth": 4,
+    "Four solid sphere-based worm wake mounds": 4,
+    "Cyan base pad ring cross and four beacon poles": 4,
+    "Amber evacuation rings and pole beacons": 4,
+    "Terrain-normal-aligned evacuation markers": 4,
+    "Worker torso head visor limbs and overhead marker": 4,
+    "Active pickup worker elevation and winch cylinder": 4,
+    "Group markers disappear when outside crew are gone": 4,
+    "Dynamic worm body streaming and shared render-pass pose": 4,
+    "Exact raw dune height-field equation": 5,
+    "Smooth base terrace blend": 5,
+    "Ellipsoid and UV sphere parameterization": 5,
+    "Cylinder side and cap construction": 5,
+    "Torus major radius 1 and minor radius 0.025": 5,
+    "Worm radial sweep and tangent frame": 5,
+    "Buried cubic Bezier worm centerline": 5,
+    "Constant-curvature 64-unit worm neck": 5,
+    "Worm 32-cycle ridge radius and aperture blend": 5,
+    "Curved tooth centerline tangent frame taper and true apex": 5,
+    "Finite-difference terrain and derivative worm normals": 5,
+    "Damped flight velocity and position integration": 6,
+    "28 normal and 48 boosted movement targets": 6,
+    "Analytically integrated damped aircraft heading": 6,
+    "Bank pitch height and camera damping": 6,
+    "34-degree wing oscillation and 0.75-pi phase offset": 6,
+    "23-to-36-radians-per-second wing phase rate": 6,
+    "Eight-degree wing pitch twist sweep and dihedral": 6,
+    "Harvester trigonometric route and derivative yaw": 6,
+    "Harvester terrain-height and local-slope following": 6,
+    "Travel-driven tread wheel and cutter animation": 6,
+    "Crew release batches of one to four at 6+7*j seconds": 6,
+    "Scheduled route-position crew release": 6,
+    "Crew running at 3.8 units per second": 6,
+    "Running and waiting limb animation cycles": 6,
+    "Worm approach gap from 220 to 18 units": 6,
+    "Worm approach rise lunge swallow and retreat stages": 6,
+    "Harvester 20-unit sinking and removal": 6,
+    "Current constant 150-second pursuit and 60-second extraction": 6,
+    "Timed proximity hazards crew losses and aircraft loss": 6,
+    "W S thrust and A D strafe": 7,
+    "Q E altitude requests and obstacle clearance": 7,
+    "Mouse horizontal and arrow-key aircraft steering": 7,
+    "Mouse vertical and Up Down camera elevation": 7,
+    "Normalized mouse deadzone and cursor-position control": 7,
+    "Space braking low hover pickup and unloading": 7,
+    "Left Shift boost reserve drain recharge and lock": 7,
+    "C camera cycling": 7,
+    "Wide close and tactical overhead camera presets": 7,
+    "Heading-locked damped camera with terrain clearance": 7,
+    "Enter start or next mission and R retry": 7,
+    "P pause M mute F wireframe F11 fullscreen Escape exit": 7,
+    "12-unit pickup range 11-unit clearance and speed below 6": 7,
+    "0.42-second per-worker pickup and eight-seat capacity": 7,
+    "14-unit base radius and 1.2-second cabin unloading": 7,
+    "Delivery-only secured scoring and pickup progress reset": 7,
+    "2048-by-2048 moving directional shadow depth map": 8,
+    "5-by-5 PCF receiver-slope correction and shadow bias": 8,
+    "Warm ambient directional sun and Blinn-Phong lighting": 8,
+    "Wrapped diffuse sand lighting": 8,
+    "Material emission without extra lights": 8,
+    "Procedural sand ripples slope color and normal detail": 8,
+    "Procedural quartz sparkle grain and rock strata": 8,
+    "Procedural sky gradient sun disc and halo": 8,
+    "Exponential-squared distance fog": 8,
+    "In-shader tone mapping and gamma approximation": 8,
+    "GPU crater 13-unit depth and 48-unit radius": 8,
+    "Matching scene and shadow crater displacement": 8,
+    "2400 CPU-updated sand particles": 8,
+    "Ambient crawler worm and downwash emission categories": 8,
+    "Particle lifetime gust motion terrain contact and respawn": 8,
+    "Sorted camera-facing instanced dust billboards": 8,
+    "Procedural soft particle mask alpha blend and lifetime fade": 8,
+    "Requested four-sample MSAA VSync and wireframe inspection": 8,
+    "HUD rescue counters inside outside groups wave and best": 9,
+    "HUD breach extraction pursuit and worm-distance feedback": 9,
+    "HUD altitude speed FPS boost mute and action prompts": 9,
+    "HUD eight-seat indicators and pickup unloading progress": 9,
+    "Title pause and debrief mission overlays": 9,
+    "North-up radar with aircraft base all outside crew harvester worm": 9,
+    "In-code 5-by-7 glyphs rendered as rectangles": 9,
+    "Responsive HUD wrapping panel layout and readable sizing": 9,
+    "HUD OpenGL state preservation and dynamic buffer": 9,
+    "Eight spatial sound roles": 9,
+    "Ornithopter flight and boost sounds": 9,
+    "Worm rumble and breach sounds": 9,
+    "Harvester engine and crew help sounds": 9,
+    "Rescue winch and safe delivery sounds": 9,
+    "Camera audio listener and inverse-distance attenuation": 9,
+    "Speed-dependent flight pitch and smoothed boost volume": 9,
+    "Proximity-modulated worm volume and event-triggered cues": 9,
+    "Missing-audio fallback silent engine fallback and mute": 9,
+    "Focus-loss input clearing pause and resize recentering": 9,
+    "Fullscreen switching and minimized-window event wait": 9,
+    "Delta-time cap and bounded 120-Hz mission substeps": 9,
+    "CMake OpenGL GLFW GLAD GLM and miniaudio build": 9,
+    "Runtime audio asset copying and debugger working directory": 9,
+    "CTest RescueMissionLogic and current partial-pass results": 9,
+    "Four current 120-frame rendering smoke modes": 9,
+    "Timer regression versus older test and report expectations": 9,
+    "Existing LaTeX report and implementation references": 9,
+    "Three core requirements closing synthesis": 10,
+    "Available external demonstration video without embedding": 10,
+    "Available project report": 10,
+    "Known limits opaque glass fixed tanks and GPU-only crater": 10,
+    "Unsupported undefined Karpov objects category": 10
+  },
+  "capture_provenance": "Gameplay: current Release smoke modes. Close-ups/poses: capture.cpp reuses original draw routines with staged state and inspection framing; CPU/GPU project source is not edited.",
+  "verification": {
+    "mission_cases_passed": 23,
+    "mission_cases_total": 27,
+    "checks": 1057,
+    "failed_assertions": 5,
+    "smoke_modes_passed": 4,
+    "frames_per_mode": 120
+  }
+}
